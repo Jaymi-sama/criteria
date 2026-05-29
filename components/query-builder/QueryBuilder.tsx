@@ -5,6 +5,7 @@ import { useQueryStore } from '@/lib/store';
 import { ConditionGroup } from './ConditionGroup';
 import { Button } from '@/components/ui/button';
 import { ArrowsCounterClockwise, Play, FileCode } from '@phosphor-icons/react';
+import { AdvancedInteractions } from './AdvancedInteractions';
 
 export function QueryBuilder() {
   const { rootGroup, resetQuery } = useQueryStore();
@@ -20,6 +21,7 @@ export function QueryBuilder() {
         </div>
 
         <div className="flex items-center gap-2">
+          <AdvancedInteractions />
           <Button
             variant="ghost"
             size="sm"
