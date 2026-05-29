@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('useAppStore', () => {
   beforeEach(() => {
-    // Reset store state if necessary. 
+    // Reset store state if necessary.
     // Zustand stores usually need a manual reset in tests if they are global.
     useAppStore.setState({ count: 0 });
   });
