@@ -15,6 +15,9 @@ test('query builder UI loads and allows adding rules', async ({ page }) => {
   // Verify the results panel is present
   await expect(page.getByRole('heading', { name: /Results/i })).toBeVisible();
 
+  // Verify the history button is present
+  await expect(page.getByRole('button', { name: /History/i })).toBeVisible();
+
   // Test adding a rule
   const addRuleButton = page.getByRole('button', { name: /Add Rule/i });
   await expect(addRuleButton).toBeVisible();
