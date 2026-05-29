@@ -33,19 +33,28 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
   return (
     <div
       className={cn(
-        'border-border bg-background/50 flex flex-col gap-2 rounded-lg border p-3 transition-all',
-        depth > 0 && 'border-l-accent/30 ml-4 border-l-2'
+        'group/container flex flex-col gap-4 transition-all',
+        !isRoot && 'relative ml-6 pt-2 pl-8'
       )}
     >
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+      {/* Visual Indentation Line */}
+      {!isRoot && (
+        <div className="bg-border group-hover/container:bg-accent/40 absolute top-0 bottom-0 left-0 w-0.5 transition-colors" />
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
           <Button
-            variant="ghost"
-            size="icon"
-            className="text-text-secondary h-6 w-6"
+            variant="secondary"
+            size="icon-sm"
+            className="text-text-secondary bg-background/50 border-border h-8 w-8 rounded-md border"
             onClick={toggleCollapse}
           >
-            {isCollapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
+            {isCollapsed ? (
+              <CaretRight size={14} weight="bold" />
+            ) : (
+              <CaretDown size={14} weight="bold" />
+            )}
           </Button>
 
           <Select
@@ -54,20 +63,24 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
               updateGroup(group.id, { logicalOperator: value as LogicalOperator })
             }
           >
-            <SelectTrigger className="bg-accent text-accent-foreground h-8 w-[80px] border-none text-[10px] font-bold tracking-wider uppercase">
+            <SelectTrigger className="bg-accent text-accent-foreground h-8 w-[90px] border-none text-[11px] font-black tracking-widest uppercase shadow-lg">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="AND">And</SelectItem>
-              <SelectItem value="OR">Or</SelectItem>
+              <SelectItem value="AND" className="text-[11px] font-bold tracking-widest uppercase">
+                And
+              </SelectItem>
+              <SelectItem value="OR" className="text-[11px] font-bold tracking-widest uppercase">
+                Or
+              </SelectItem>
             </SelectContent>
           </Select>
 
           {!isRoot && (
             <Button
               variant="ghost"
-              size="icon"
-              className="text-text-secondary hover:text-destructive h-8 w-8"
+              size="icon-sm"
+              className="text-text-secondary hover:text-destructive hover:bg-destructive/10 h-8 w-8"
               onClick={() => removeNode(group.id)}
             >
               <Trash size={16} />
@@ -79,28 +92,30 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-border h-8 gap-1 border-dashed text-[11px] font-medium"
+            className="border-border bg-surface/50 hover:bg-accent/10 hover:border-accent/30 h-8 gap-2 text-[10px] font-bold tracking-wider uppercase"
             onClick={() => addRule(group.id)}
           >
-            <Plus size={14} /> Add Rule
+            <Plus size={14} weight="bold" /> Add Rule
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="border-border h-8 gap-1 border-dashed text-[11px] font-medium"
+            className="border-border bg-surface/50 hover:bg-accent/10 hover:border-accent/30 h-8 gap-2 text-[10px] font-bold tracking-wider uppercase"
             onClick={() => addGroup(group.id)}
           >
-            <FolderPlus size={14} /> Add Group
+            <FolderPlus size={14} weight="bold" /> Add Group
           </Button>
         </div>
       </div>
 
       {!isCollapsed && (
-        <div className="mt-1 flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {group.children.length === 0 ? (
-            <p className="text-text-secondary px-9 py-2 text-[11px] italic">
-              No rules or groups added yet.
-            </p>
+            <div className="border-border bg-background/20 flex flex-col items-center justify-center rounded-xl border border-dashed p-8">
+              <p className="text-text-secondary text-[11px] font-bold tracking-[0.2em] uppercase opacity-50">
+                Empty Logical Group
+              </p>
+            </div>
           ) : (
             group.children.map((child) =>
               child.type === 'rule' ? (

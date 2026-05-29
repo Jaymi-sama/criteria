@@ -69,88 +69,103 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
   };
 
   return (
-    <div className="group bg-surface border-border hover:border-accent/50 flex items-center gap-2 rounded-md border px-3 py-2 shadow-sm transition-all">
-      <div className="text-text-secondary hover:text-text-primary cursor-grab active:cursor-grabbing">
-        <DotsSixVertical size={18} weight="bold" />
+    <div className="group bg-surface border-border hover:border-accent/40 animate-in fade-in slide-in-from-left-2 flex flex-wrap items-center gap-4 rounded-xl border p-4 shadow-sm transition-all duration-200">
+      <div className="text-text-secondary hover:text-text-primary flex cursor-grab items-center justify-center active:cursor-grabbing">
+        <DotsSixVertical size={20} weight="bold" />
       </div>
 
-      <Select value={rule.fieldId} onValueChange={handleFieldChange}>
-        <SelectTrigger className="bg-background border-border h-9 w-[160px]">
-          <SelectValue placeholder="Select field" />
-        </SelectTrigger>
-        <SelectContent>
-          {schema.map((field) => (
-            <SelectItem key={field.id} value={field.id}>
-              {field.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={rule.operator}
-        onValueChange={(value) => updateRule(rule.id, { operator: value as Operator })}
-      >
-        <SelectTrigger className="bg-background border-border h-9 w-[140px]">
-          <SelectValue placeholder="Operator" />
-        </SelectTrigger>
-        <SelectContent>
-          {operators.map((op) => (
-            <SelectItem key={op.value} value={op.value}>
-              {op.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <div className="min-w-[120px] flex-1">
-        {currentField?.type === 'enum' ? (
-          <Select
-            value={rule.value as string}
-            onValueChange={(value) => updateRule(rule.id, { value })}
-          >
-            <SelectTrigger className="bg-background border-border h-9 w-full">
-              <SelectValue placeholder="Select value" />
+      <div className="flex flex-1 flex-wrap items-center gap-3">
+        <div className="flex min-w-[140px] flex-1 flex-col gap-1.5">
+          <span className="text-text-secondary pl-1 text-[10px] font-black tracking-widest uppercase">
+            Field
+          </span>
+          <Select value={rule.fieldId} onValueChange={handleFieldChange}>
+            <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+              <SelectValue placeholder="Select field" />
             </SelectTrigger>
             <SelectContent>
-              {currentField.options?.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              {schema.map((field) => (
+                <SelectItem key={field.id} value={field.id}>
+                  {field.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        ) : currentField?.type === 'boolean' ? (
+        </div>
+
+        <div className="flex min-w-[120px] flex-1 flex-col gap-1.5">
+          <span className="text-text-secondary pl-1 text-[10px] font-black tracking-widest uppercase">
+            Operator
+          </span>
           <Select
-            value={String(rule.value)}
-            onValueChange={(value) => updateRule(rule.id, { value: value === 'true' })}
+            value={rule.operator}
+            onValueChange={(value) => updateRule(rule.id, { operator: value as Operator })}
           >
-            <SelectTrigger className="bg-background border-border h-9 w-full">
-              <SelectValue />
+            <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+              <SelectValue placeholder="Operator" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="true">True</SelectItem>
-              <SelectItem value="false">False</SelectItem>
+              {operators.map((op) => (
+                <SelectItem key={op.value} value={op.value}>
+                  {op.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-        ) : (
-          <Input
-            className="bg-background border-border h-9"
-            type={currentField?.type === 'number' ? 'number' : 'text'}
-            value={rule.value as string}
-            onChange={(e) => updateRule(rule.id, { value: e.target.value })}
-            placeholder="Value..."
-          />
-        )}
+        </div>
+
+        <div className="flex min-w-[180px] flex-[2] flex-col gap-1.5">
+          <span className="text-text-secondary pl-1 text-[10px] font-black tracking-widest uppercase">
+            Value
+          </span>
+          {currentField?.type === 'enum' ? (
+            <Select
+              value={rule.value as string}
+              onValueChange={(value) => updateRule(rule.id, { value })}
+            >
+              <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+                <SelectValue placeholder="Select value" />
+              </SelectTrigger>
+              <SelectContent>
+                {currentField.options?.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : currentField?.type === 'boolean' ? (
+            <Select
+              value={String(rule.value)}
+              onValueChange={(value) => updateRule(rule.id, { value: value === 'true' })}
+            >
+              <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">True</SelectItem>
+                <SelectItem value="false">False</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              className="bg-background border-border h-11 font-bold"
+              type={currentField?.type === 'number' ? 'number' : 'text'}
+              value={rule.value as string}
+              onChange={(e) => updateRule(rule.id, { value: e.target.value })}
+              placeholder="Enter value..."
+            />
+          )}
+        </div>
       </div>
 
       <Button
         variant="ghost"
         size="icon"
-        className="text-text-secondary hover:text-destructive hover:bg-destructive/10 h-9 w-9"
+        className="text-text-secondary hover:text-destructive hover:bg-destructive/10 mt-5 h-10 w-10"
         onClick={() => removeNode(rule.id)}
       >
-        <Trash size={18} />
+        <Trash size={20} />
       </Button>
     </div>
   );
