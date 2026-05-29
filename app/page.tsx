@@ -2,6 +2,7 @@
 
 import { QueryBuilder } from '@/components/query-builder/QueryBuilder';
 import { QueryPreview } from '@/components/query-builder/QueryPreview';
+import { QueryResults } from '@/components/query-builder/QueryResults';
 
 export default function Home() {
   return (
@@ -15,12 +16,18 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto grid w-full max-w-7xl grid-cols-1 items-start gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <QueryBuilder />
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <QueryBuilder />
+          </div>
+          <div className="h-full min-h-[500px] lg:col-span-1">
+            <QueryPreview />
+          </div>
         </div>
-        <div className="h-full min-h-[500px] lg:col-span-1">
-          <QueryPreview />
+
+        <div className="w-full">
+          <QueryResults />
         </div>
       </main>
 
