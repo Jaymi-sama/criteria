@@ -1,18 +1,24 @@
 import { test, expect } from '@playwright/test';
 
-test('has title and count works', async ({ page }) => {
+test('query builder UI loads and allows adding rules', async ({ page }) => {
   await page.goto('/');
 
-  // Expect a title "to contain" a substring.
-  await expect(page.locator('h2').filter({ hasText: 'Zustand Store' })).toBeVisible();
+  // Verify the main header
+  await expect(page.locator('h1')).toHaveText('Criteria');
 
-  // Test the count
-  const countValue = page.locator('span.font-mono');
-  await expect(countValue).toHaveText('0');
+  // Verify the query editor is present
+  await expect(page.locator('h2')).toHaveText('Query Editor');
 
-  await page.click('button:has-text("+")');
-  await expect(countValue).toHaveText('1');
+  // Verify the live preview panel is present
+  await expect(page.locator('h3')).toHaveText('Live Preview');
 
-  await page.click('button:has-text("-")');
-  await expect(countValue).toHaveText('0');
+  // Test adding a rule
+  const addRuleButton = page.getByRole('button', { name: /Add Rule/i });
+  await expect(addRuleButton).toBeVisible();
+  
+  await addRuleButton.click();
+
+  // Verify that a select field (part of the rule) appeared
+  const fieldSelect = page.getByRole('combobox').first();
+  await expect(fieldSelect).toBeVisible();
 });
