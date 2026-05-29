@@ -4,21 +4,21 @@ import { QueryBuilder } from '@/components/query-builder/QueryBuilder';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-1 flex-col items-center gap-12 p-8 sm:p-20">
-      <header className="flex w-full max-w-5xl items-center justify-between">
+    <div className="flex flex-col flex-1 items-center p-8 sm:p-20 min-h-screen gap-12">
+      <header className="w-full max-w-5xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="bg-accent rounded-lg p-2">
-            <div className="border-accent-foreground h-6 w-6 rounded-sm border-2" />
+          <div className="bg-accent p-2 rounded-lg">
+            <div className="w-6 h-6 border-2 border-accent-foreground rounded-sm" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Criteria</h1>
         </div>
       </header>
 
-      <main className="flex w-full flex-col items-center gap-12">
+      <main className="w-full flex flex-col gap-12 items-center">
         <QueryBuilder />
       </main>
 
-      <footer className="text-text-secondary mt-auto py-8 text-sm font-medium">
+      <footer className="mt-auto py-8 text-text-secondary text-sm font-medium">
         Built with Precision & Performance
       </footer>
     </div>
