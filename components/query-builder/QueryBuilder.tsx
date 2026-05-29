@@ -4,42 +4,46 @@ import React from 'react';
 import { useQueryStore } from '@/lib/store';
 import { ConditionGroup } from './ConditionGroup';
 import { Button } from '@/components/ui/button';
-import { ArrowsCounterClockwise, Play, FileCode } from '@phosphor-icons/react';
-import { AdvancedInteractions } from './AdvancedInteractions';
+import { ArrowsCounterClockwise, Play, ShareNetwork } from '@phosphor-icons/react';
 
 export function QueryBuilder() {
   const { rootGroup, resetQuery } = useQueryStore();
 
   return (
-    <div className="bg-surface border-border mx-auto flex w-full max-w-5xl flex-col gap-6 rounded-xl border p-6 shadow-xl">
-      <div className="border-border flex items-center justify-between border-b pb-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-text-primary text-xl font-bold tracking-tight">Query Editor</h2>
-          <p className="text-text-secondary text-xs font-medium">
-            Build complex filters with nested logic
-          </p>
-        </div>
-
+    <div className="flex w-full flex-col gap-8">
+      {/* Builder Toolbar */}
+      <div className="bg-surface border-border flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 shadow-sm">
         <div className="flex items-center gap-2">
-          <AdvancedInteractions />
           <Button
             variant="ghost"
             size="sm"
-            className="text-text-secondary hover:text-text-primary h-9 gap-2"
+            className="text-text-secondary hover:text-text-primary h-10 gap-2 font-bold tracking-wider uppercase"
             onClick={resetQuery}
           >
             <ArrowsCounterClockwise size={18} /> Reset
           </Button>
-          <Button variant="secondary" size="sm" className="h-9 gap-2">
-            <FileCode size={18} /> Preview
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-text-secondary hover:text-text-primary border-border h-10 gap-2 font-bold tracking-wider uppercase"
+          >
+            <ShareNetwork size={18} weight="duotone" /> Export
           </Button>
-          <Button variant="accent" size="sm" className="h-9 gap-2 font-bold">
+          <Button
+            variant="accent"
+            size="sm"
+            className="h-10 gap-2 px-6 font-black tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+          >
             <Play size={18} weight="fill" /> Run Query
           </Button>
         </div>
       </div>
 
-      <div className="min-h-[300px] overflow-x-auto">
+      {/* Main Builder Canvas */}
+      <div className="bg-surface/30 border-border min-h-[400px] rounded-2xl border p-6">
         <ConditionGroup group={rootGroup} />
       </div>
     </div>
