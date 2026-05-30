@@ -14,7 +14,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ListBullets, Database, Circle, MagnifyingGlass } from '@phosphor-icons/react';
+import {
+  ListBullets,
+  Database,
+  Circle,
+  MagnifyingGlass,
+  CaretUp,
+  CaretDown,
+  CaretUpDown,
+} from '@phosphor-icons/react';
 
 interface MockDataItem {
   id: number;
@@ -40,10 +48,33 @@ const FULL_MOCK_DATA: MockDataItem[] = [
   { id: 13, name: 'Mike Ross', age: 33, status: 'pending', createdAt: '2024-03-22' },
 ];
 
+type SortKey = keyof MockDataItem;
+type SortOrder = 'asc' | 'desc' | null;
+
+// Extracted SortIcon component to satisfy linting rules (no components inside render)
+function SortIcon({ 
+  column, 
+  activeSortKey, 
+  sortOrder 
+}: { 
+  column: SortKey; 
+  activeSortKey: SortKey | null; 
+  sortOrder: SortOrder 
+}) {
+  if (activeSortKey !== column) return <CaretUpDown size={14} className="opacity-20" />;
+  return sortOrder === 'asc' ? (
+    <CaretUp size={14} className="text-accent" weight="bold" />
+  ) : (
+    <CaretDown size={14} className="text-accent" weight="bold" />
+  );
+}
+
 export function QueryResults() {
   const { appliedRootGroup } = useQueryStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(null);
 
   // Wait for hydration to avoid SSR mismatch with persistent store
   useEffect(() => {
@@ -51,49 +82,75 @@ export function QueryResults() {
     setIsHydrated(true);
   }, []);
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      if (sortOrder === 'asc') setSortOrder('desc');
+      else if (sortOrder === 'desc') {
+        setSortKey(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
+
   const filteredData = useMemo(() => {
     if (!isHydrated) return FULL_MOCK_DATA;
 
-    const results = executeQuery(
+    let results = executeQuery(
       FULL_MOCK_DATA as unknown as Record<string, unknown>[],
       appliedRootGroup
-    );
+    ) as unknown as MockDataItem[];
 
-    const typedResults = results as unknown as MockDataItem[];
+    // Local Search
+    if (searchTerm) {
+      results = results.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.id.toString().includes(searchTerm)
+      );
+    }
 
-    if (!searchTerm) return typedResults;
+    // Sorting
+    if (sortKey && sortOrder) {
+      results = [...results].sort((a, b) => {
+        const aVal = a[sortKey];
+        const bVal = b[sortKey];
 
-    return typedResults.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.id.toString().includes(searchTerm)
-    );
-  }, [appliedRootGroup, searchTerm, isHydrated]);
+        if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return results;
+  }, [appliedRootGroup, searchTerm, isHydrated, sortKey, sortOrder]);
 
   if (!isHydrated) {
     return (
-      <div className="bg-surface/30 flex h-[400px] w-full items-center justify-center backdrop-blur-sm">
-        <Circle size={24} className="text-accent animate-spin" />
+      <div className="flex h-[400px] w-full items-center justify-center bg-surface/30 backdrop-blur-sm">
+        <Circle size={24} className="animate-spin text-accent" />
       </div>
     );
   }
 
   return (
-    <div className="bg-surface/30 flex h-full min-h-[400px] flex-col overflow-hidden backdrop-blur-sm">
-      <div className="border-border bg-background/40 flex flex-wrap items-center justify-between border-b px-8 py-6">
+    <div className="flex flex-col h-full bg-surface/30 backdrop-blur-sm overflow-hidden min-h-[400px]">
+      <div className="flex flex-wrap items-center justify-between px-8 py-6 border-b border-border bg-background/40">
         <div className="flex items-center gap-4">
-          <div className="bg-accent/10 border-accent/20 rounded-xl border p-2.5">
+          <div className="p-2.5 bg-accent/10 rounded-xl border border-accent/20">
             <ListBullets size={24} className="text-accent" weight="duotone" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-text-primary text-base font-black tracking-tighter uppercase">
+            <h3 className="text-base font-black text-text-primary uppercase tracking-tighter">
               Query Inspection
             </h3>
             <div className="flex items-center gap-2">
-              <span className="text-text-secondary bg-background/50 border-border rounded border px-2 py-0.5 text-[10px] font-black tracking-widest uppercase">
+              <span className="text-text-secondary bg-background/50 border-border rounded border px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
                 {filteredData.length} Records Match
               </span>
-              <span className="flex items-center gap-1 text-[10px] font-black tracking-widest text-green-500 uppercase">
+              <span className="text-green-500 flex items-center gap-1 text-[10px] font-black uppercase tracking-widest">
                 <Circle size={8} weight="fill" className="animate-pulse" />
                 Live Simulation
               </span>
@@ -105,14 +162,14 @@ export function QueryResults() {
           <div className="group relative">
             <MagnifyingGlass
               size={16}
-              className="text-text-secondary group-focus-within:text-accent absolute top-1/2 left-3 -translate-y-1/2 opacity-50 transition-all group-focus-within:opacity-100"
+              className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2 transition-all opacity-50 group-focus-within:text-accent group-focus-within:opacity-100"
             />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter results..."
-              className="bg-background/50 border-border text-text-primary placeholder:text-text-secondary/50 focus:border-accent/50 focus:ring-accent/10 w-[240px] rounded-lg border py-2 pr-4 pl-10 text-xs font-bold transition-all focus:ring-4 focus:outline-none"
+              className="bg-background/50 border-border text-text-primary placeholder:text-text-secondary/50 h-10 w-[240px] rounded-lg border pl-10 pr-4 text-xs font-bold transition-all focus:border-accent/50 focus:ring-4 focus:ring-accent/10 focus:outline-none"
             />
           </div>
         </div>
@@ -123,20 +180,45 @@ export function QueryResults() {
           <Table>
             <TableHeader className="bg-background/20 sticky top-0 z-10 backdrop-blur-md">
               <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-text-secondary py-5 pl-6 text-[10px] font-black tracking-[0.2em] uppercase">
-                  Identifier
+                <TableHead
+                  className="py-5 pl-6 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  onClick={() => handleSort('id')}
+                >
+                  <div className="flex items-center gap-2">
+                    Identifier <SortIcon column="id" activeSortKey={sortKey} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
-                <TableHead className="text-text-secondary py-5 text-[10px] font-black tracking-[0.2em] uppercase">
-                  Display Name
+                <TableHead
+                  className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-2">
+                    Display Name <SortIcon column="name" activeSortKey={sortKey} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
-                <TableHead className="text-text-secondary py-5 text-[10px] font-black tracking-[0.2em] uppercase">
-                  Age
+                <TableHead
+                  className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  onClick={() => handleSort('age')}
+                >
+                  <div className="flex items-center gap-2">
+                    Age <SortIcon column="age" activeSortKey={sortKey} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
-                <TableHead className="text-text-secondary py-5 text-[10px] font-black tracking-[0.2em] uppercase">
-                  Current Status
+                <TableHead
+                  className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center gap-2">
+                    Current Status <SortIcon column="status" activeSortKey={sortKey} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
-                <TableHead className="text-text-secondary py-5 pr-6 text-[10px] font-black tracking-[0.2em] uppercase">
-                  Timestamp
+                <TableHead
+                  className="py-5 pr-6 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  onClick={() => handleSort('createdAt')}
+                >
+                  <div className="flex items-center gap-2">
+                    Timestamp <SortIcon column="createdAt" activeSortKey={sortKey} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -146,7 +228,7 @@ export function QueryResults() {
                   <TableCell colSpan={5} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 opacity-40">
                       <Database size={48} weight="duotone" />
-                      <p className="text-sm font-bold tracking-widest uppercase">
+                      <p className="text-sm font-bold uppercase tracking-widest">
                         No Matches Found
                       </p>
                       <p className="text-xs">Adjust your query logic to see results</p>
@@ -159,7 +241,7 @@ export function QueryResults() {
                     key={row.id}
                     className="border-border/50 hover:bg-accent/5 group/row transition-all"
                   >
-                    <TableCell className="text-text-secondary group-hover/row:text-accent py-4 pl-6 font-mono text-xs transition-colors">
+                    <TableCell className="text-text-secondary py-4 pl-6 font-mono text-xs group-hover/row:text-accent transition-colors">
                       USR-{row.id.toString().padStart(4, '0')}
                     </TableCell>
                     <TableCell className="text-text-primary py-4 text-sm font-bold">
@@ -172,7 +254,7 @@ export function QueryResults() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          'rounded-md px-2 py-0.5 text-[9px] font-black tracking-widest uppercase transition-all',
+                          'rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest transition-all',
                           row.status === 'active'
                             ? 'border-green-500/20 bg-green-500/10 text-green-500 group-hover/row:border-green-500/50'
                             : row.status === 'inactive'
@@ -195,14 +277,14 @@ export function QueryResults() {
       </div>
 
       <div className="border-border bg-background/40 flex items-center justify-between border-t px-8 py-4">
-        <div className="text-text-secondary flex items-center gap-2">
+        <div className="flex items-center gap-2 text-text-secondary">
           <Database size={16} weight="duotone" className="text-accent/50" />
-          <span className="text-[9px] font-black tracking-[0.3em] uppercase opacity-50">
+          <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-50">
             Secure Mock Database Engine
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-text-secondary text-[10px] font-black tracking-widest uppercase opacity-60">
+          <span className="text-text-secondary text-[10px] font-black uppercase tracking-widest opacity-60">
             Showing {filteredData.length} of {FULL_MOCK_DATA.length}
           </span>
           <div className="flex gap-1">
