@@ -1,21 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQueryStore } from '@/lib/store';
 import { generateSQL, generateMongo } from '@/lib/query-generator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TerminalWindow, Copy, CheckCircle, Database } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import { Copy, TerminalWindow, Database, Code, Check } from '@phosphor-icons/react';
+import { cn } from '@/lib/utils';
 
 export function QueryPreview() {
-  const { appliedRootGroup, schema } = useQueryStore();
-  const [copied, setCopied] = React.useState(false);
+  const appliedRootGroup = useQueryStore((s) => s.appliedRootGroup);
+  const schema = useQueryStore((s) => s.schema);
+  const [activeTab, setActiveTab] = useState('sql');
+  const [copied, setCopied] = useState(false);
 
-  const sql = generateSQL(appliedRootGroup, schema) || '-- No conditions applied';
-  const mongo = JSON.stringify(generateMongo(appliedRootGroup), null, 2);
+  const { sql, mongo } = useMemo(() => {
+    return {
+      sql: generateSQL(appliedRootGroup, schema),
+      mongo: JSON.stringify(generateMongo(appliedRootGroup), null, 2),
+    };
+  }, [appliedRootGroup, schema]);
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = async () => {
+    const text = activeTab === 'sql' ? sql : mongo;
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -28,76 +35,79 @@ export function QueryPreview() {
             <TerminalWindow size={18} className="text-accent sm:size-5" weight="duotone" />
           </div>
           <div className="flex flex-col">
-            <h3 className="text-text-primary text-[10px] font-black tracking-widest uppercase sm:text-xs">
+            <span className="text-text-primary text-[10px] sm:text-xs font-black uppercase tracking-widest">
               Live Output
-            </h3>
-            <span className="text-text-secondary text-[8px] font-bold tracking-tighter uppercase opacity-70 sm:text-[9px]">
-              Real-time Compiler
+            </span>
+            <span className="text-text-secondary text-[8px] sm:text-[9px] font-bold uppercase opacity-50">
+              {activeTab}
             </span>
           </div>
         </div>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={handleCopy}
+          className="text-text-secondary hover:text-accent h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-colors"
+        >
+          {copied ? (
+            <CheckCircle size={18} weight="fill" className="text-green-500" />
+          ) : (
+            <Copy size={18} />
+          )}
+        </Button>
       </div>
 
-      <Tabs defaultValue="sql" className="flex flex-1 flex-col">
-        <div className="px-4 pt-3 sm:px-6 sm:pt-4">
-          <TabsList className="bg-background/50 border-border h-9 w-full rounded-xl border p-1 sm:h-11">
-            <TabsTrigger
-              value="sql"
-              className="data-[state=active]:bg-surface data-[state=active]:text-accent flex-1 gap-1.5 text-[9px] font-black tracking-widest uppercase data-[state=active]:shadow-lg sm:gap-2 sm:text-[10px]"
-            >
-              <Database size={14} weight="duotone" className="sm:size-4" /> SQL
-            </TabsTrigger>
-            <TabsTrigger
-              value="mongo"
-              className="data-[state=active]:bg-surface data-[state=active]:text-accent flex-1 gap-1.5 text-[9px] font-black tracking-widest uppercase data-[state=active]:shadow-lg sm:gap-2 sm:text-[10px]"
-            >
-              <Code size={14} weight="duotone" className="sm:size-4" /> JSON
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      {/* Tabs */}
+      <div className="border-border flex border-b bg-background/20 p-1 sm:p-1.5">
+        <button
+          onClick={() => setActiveTab('sql')}
+          className={cn(
+            'flex-1 rounded-md px-3 py-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all',
+            activeTab === 'sql'
+              ? 'bg-accent text-accent-foreground shadow-sm'
+              : 'text-text-secondary hover:bg-surface'
+          )}
+        >
+          PostgreSQL
+        </button>
+        <button
+          onClick={() => setActiveTab('mongo')}
+          className={cn(
+            'flex-1 rounded-md px-3 py-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all',
+            activeTab === 'mongo'
+              ? 'bg-accent text-accent-foreground shadow-sm'
+              : 'text-text-secondary hover:bg-surface'
+          )}
+        >
+          MongoDB
+        </button>
+      </div>
 
-        <div className="text-text-secondary flex-1 overflow-hidden p-4 font-mono text-[12px] leading-relaxed sm:p-6 sm:text-[13px]">
-          <TabsContent value="sql" className="group relative mt-0 h-full outline-none">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="bg-surface/50 border-border absolute top-0 right-0 h-7 w-7 border opacity-0 transition-opacity group-hover:opacity-100 sm:h-8 sm:w-8"
-              onClick={() => handleCopy(sql)}
-            >
-              {copied ? <Check size={12} className="text-green-500 sm:size-3.5" /> : <Copy size={12} className="sm:size-3.5" />}
-            </Button>
-            <pre className="theme-scrollbar h-full overflow-y-auto pr-2 sm:pr-4">
-              <code className="text-accent selection:bg-accent/30 block min-h-full whitespace-pre-wrap sm:whitespace-pre">{sql}</code>
-            </pre>
-          </TabsContent>
-          <TabsContent value="mongo" className="group relative mt-0 h-full outline-none">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="bg-surface/50 border-border absolute top-0 right-0 h-7 w-7 border opacity-0 transition-opacity group-hover:opacity-100 sm:h-8 sm:w-8"
-              onClick={() => handleCopy(mongo)}
-            >
-              {copied ? <Check size={12} className="text-green-500 sm:size-3.5" /> : <Copy size={12} className="sm:size-3.5" />}
-            </Button>
-            <pre className="theme-scrollbar h-full overflow-y-auto pr-2 sm:pr-4">
-              <code className="text-text-primary selection:bg-accent/30 block min-h-full whitespace-pre-wrap sm:whitespace-pre">
-                {mongo}
-              </code>
-            </pre>
-          </TabsContent>
-        </div>
-      </Tabs>
+      <div className="theme-scrollbar relative flex-1 overflow-auto bg-muted/30 p-4 sm:p-6 font-mono selection:bg-accent/30">
+        <pre className="text-[11px] sm:text-[13px] leading-relaxed">
+          <code className="text-text-primary">
+            {activeTab === 'sql' ? (
+              <span className="animate-in fade-in duration-500">{sql}</span>
+            ) : (
+              <span className="animate-in fade-in duration-500">{mongo}</span>
+            )}
+          </code>
+        </pre>
 
-      <div className="border-border bg-background/40 flex items-center justify-between border-t px-4 py-2 sm:px-6 sm:py-3">
-        <div className="flex items-center gap-2">
-          <div className="h-1 w-1 animate-pulse rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)] sm:h-1.5 sm:w-1.5" />
-          <span className="text-text-secondary text-[8px] font-black tracking-[0.2em] uppercase sm:text-[9px]">
-            Engine Synced
-          </span>
+        {/* Floating Accent */}
+        <div className="pointer-events-none absolute bottom-4 right-4 opacity-10">
+          <Database size={80} weight="thin" className="text-accent" />
         </div>
-        <span className="text-text-secondary text-[8px] font-black tracking-[0.2em] uppercase opacity-40 sm:text-[9px]">
-          v1.0.42
+      </div>
+
+      <div className="border-border flex items-center justify-between border-t bg-background/40 px-4 py-2 sm:px-6">
+        <span className="text-text-secondary text-[8px] sm:text-[9px] font-bold uppercase tracking-widest opacity-40">
+          Recursive Engine v1.2
         </span>
+        <div className="flex gap-1.5">
+          <div className="bg-green-500/20 h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full" />
+          <div className="bg-accent/20 h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full" />
+        </div>
       </div>
     </div>
   );

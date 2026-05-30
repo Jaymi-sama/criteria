@@ -9,10 +9,20 @@ import { ArrowsCounterClockwise, Play } from '@phosphor-icons/react';
 import { AdvancedInteractions } from './AdvancedInteractions';
 import { ImportExportModal } from './ImportExportModal';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 export function QueryBuilder() {
-  const { rootGroup, resetQuery, runQuery } = useQueryStore();
+  const { rootGroup, resetQuery, runQuery, validationErrors } = useQueryStore();
   useKeyboardShortcuts();
+
+  const handleRunQuery = () => {
+    const success = runQuery();
+    if (!success) {
+      console.log('Query validation failed.');
+    }
+  };
+
+  const hasErrors = Object.keys(validationErrors).length > 0;
 
   return (
     <div className="flex w-full flex-col gap-6 sm:gap-8">
@@ -40,10 +50,10 @@ export function QueryBuilder() {
               </TooltipContent>
             </Tooltip>
           </div>
-          </div>
+        </div>
 
-          {/* Right Side Group (Primary) */}
-          <div className="contents sm:flex sm:items-center sm:justify-end sm:gap-3">
+        {/* Right Side Group (Primary) */}
+        <div className="contents sm:flex sm:items-center sm:justify-end sm:gap-3">
           <div className="w-full sm:w-auto">
             <ImportExportModal />
           </div>
@@ -53,19 +63,23 @@ export function QueryBuilder() {
                 <Button
                   variant="accent"
                   size="sm"
-                  onClick={runQuery}
-                  className="bg-accent text-accent-foreground h-10 w-full gap-2 px-4 font-black uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(245,158,11,0.2)] sm:w-auto sm:px-6 sm:text-xs cursor-pointer"
+                  onClick={handleRunQuery}
+                  className={cn(
+                    "bg-accent text-accent-foreground h-10 w-full gap-2 px-4 font-black uppercase tracking-widest text-[10px] sm:w-auto sm:px-6 sm:text-xs cursor-pointer transition-all active:scale-95",
+                    hasErrors && "ring-2 ring-destructive ring-offset-2 ring-offset-background"
+                  )}
                 >
                   <Play size={18} weight="fill" /> Run Query
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="font-bold uppercase tracking-widest">
-                Ctrl + Enter
+                {hasErrors ? "Fix errors to run" : "Ctrl + Enter"}
               </TooltipContent>
             </Tooltip>
           </div>
-          </div>
+        </div>
       </div>
+
       {/* Main Builder Canvas */}
       <div className="bg-surface/30 border-border min-h-[400px] rounded-2xl border p-4 sm:p-6 overflow-x-hidden">
         <ConditionGroup group={rootGroup} />

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { useQueryStore } from '@/lib/store';
 import { QueryRule, Operator, FieldType } from '@/types/query';
 import { Trash, DotsSixVertical } from '@phosphor-icons/react';
@@ -54,8 +54,12 @@ interface ConditionRuleProps {
   rule: QueryRule;
 }
 
-export function ConditionRule({ rule }: ConditionRuleProps) {
-  const { schema, updateRule, removeNode, validationErrors } = useQueryStore();
+export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
+  const schema = useQueryStore((s) => s.schema);
+  const updateRule = useQueryStore((s) => s.updateRule);
+  const removeNode = useQueryStore((s) => s.removeNode);
+  const validationErrors = useQueryStore((s) => s.validationErrors);
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: rule.id,
   });
@@ -72,16 +76,37 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
   const currentField = schema.find((f) => f.id === rule.fieldId);
   const operators = currentField ? OPERATORS_BY_TYPE[currentField.type] : [];
 
-  const handleFieldChange = (fieldId: string) => {
-    const newField = schema.find((f) => f.id === fieldId);
-    if (newField) {
-      updateRule(rule.id, {
-        fieldId,
-        operator: OPERATORS_BY_TYPE[newField.type][0].value,
-        value: newField.type === 'boolean' ? true : '',
-      });
-    }
-  };
+  const handleFieldChange = useCallback(
+    (fieldId: string) => {
+      const newField = schema.find((f) => f.id === fieldId);
+      if (newField) {
+        updateRule(rule.id, {
+          fieldId,
+          operator: OPERATORS_BY_TYPE[newField.type][0].value,
+          value: newField.type === 'boolean' ? true : '',
+        });
+      }
+    },
+    [rule.id, schema, updateRule]
+  );
+
+  const handleOperatorChange = useCallback(
+    (value: string) => {
+      updateRule(rule.id, { operator: value as Operator });
+    },
+    [rule.id, updateRule]
+  );
+
+  const handleValueChange = useCallback(
+    (value: string | number | boolean | string[] | number[]) => {
+      updateRule(rule.id, { value });
+    },
+    [rule.id, updateRule]
+  );
+
+  const handleRemove = useCallback(() => {
+    removeNode(rule.id);
+  }, [rule.id, removeNode]);
 
   return (
     <div
@@ -100,13 +125,13 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
         >
           <DotsSixVertical size={20} weight="bold" />
         </div>
-        
+
         {/* Mobile Delete Button */}
         <Button
           variant="ghost"
           size="icon-xs"
           className="text-text-secondary hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:hidden"
-          onClick={() => removeNode(rule.id)}
+          onClick={handleRemove}
         >
           <Trash size={18} />
         </Button>
@@ -135,10 +160,7 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
           <span className="text-text-secondary pl-1 text-[9px] font-black tracking-widest uppercase">
             Operator
           </span>
-          <Select
-            value={rule.operator}
-            onValueChange={(value) => updateRule(rule.id, { operator: value as Operator })}
-          >
+          <Select value={rule.operator} onValueChange={handleOperatorChange}>
             <SelectTrigger className="bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10">
               <SelectValue placeholder="Operator" />
             </SelectTrigger>
@@ -158,20 +180,19 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
               Value
             </span>
             {error && (
-              <span className="text-destructive text-[8px] font-bold uppercase animate-pulse">
+              <span className="text-destructive animate-pulse text-[8px] font-bold uppercase">
                 {error}
               </span>
             )}
           </div>
           {currentField?.type === 'enum' ? (
-            <Select
-              value={rule.value as string}
-              onValueChange={(value) => updateRule(rule.id, { value })}
-            >
-              <SelectTrigger className={cn(
-                "bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10",
-                error && "border-destructive"
-              )}>
+            <Select value={rule.value as string} onValueChange={handleValueChange}>
+              <SelectTrigger
+                className={cn(
+                  'bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10',
+                  error && 'border-destructive'
+                )}
+              >
                 <SelectValue placeholder="Select value" />
               </SelectTrigger>
               <SelectContent>
@@ -183,10 +204,7 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
               </SelectContent>
             </Select>
           ) : currentField?.type === 'boolean' ? (
-            <Select
-              value={String(rule.value)}
-              onValueChange={(value) => updateRule(rule.id, { value: value === 'true' })}
-            >
+            <Select value={String(rule.value)} onValueChange={(val) => handleValueChange(val === 'true')}>
               <SelectTrigger className="bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10">
                 <SelectValue />
               </SelectTrigger>
@@ -203,7 +221,7 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
               )}
               type={currentField?.type === 'number' ? 'number' : 'text'}
               value={rule.value as string}
-              onChange={(e) => updateRule(rule.id, { value: e.target.value })}
+              onChange={(e) => handleValueChange(e.target.value)}
               placeholder="Enter value..."
             />
           )}
@@ -215,10 +233,12 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
         variant="ghost"
         size="icon"
         className="text-text-secondary hover:text-destructive hover:bg-destructive/10 hidden h-10 w-10 sm:flex"
-        onClick={() => removeNode(rule.id)}
+        onClick={handleRemove}
       >
         <Trash size={20} />
       </Button>
     </div>
   );
-}
+});
+
+ConditionRule.displayName = 'ConditionRule';
