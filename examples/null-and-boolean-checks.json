@@ -1,0 +1,7 @@
+{
+  "logicalOperator": "OR",
+  "children": [
+    { "type": "rule", "fieldId": "isVerified", "operator": "equals", "value": false },
+    { "type": "rule", "fieldId": "createdAt", "operator": "is_null", "value": "" }
+  ]
+}

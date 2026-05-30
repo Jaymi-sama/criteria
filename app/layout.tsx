@@ -3,6 +3,7 @@ import { JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -21,9 +22,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn('h-full', 'antialiased', 'dark', jetbrainsMono.variable)}>
+    <html lang="en" className={cn('h-full', 'antialiased', jetbrainsMono.variable)} suppressHydrationWarning>
       <body className={cn('bg-background text-foreground flex min-h-full flex-col font-mono')}>
-        <TooltipProvider>{children}</TooltipProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

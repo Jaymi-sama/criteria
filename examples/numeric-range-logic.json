@@ -1,0 +1,17 @@
+{
+  "logicalOperator": "AND",
+  "children": [
+    {
+      "type": "rule",
+      "fieldId": "age",
+      "operator": "greater_than",
+      "value": 25
+    },
+    {
+      "type": "rule",
+      "fieldId": "age",
+      "operator": "less_than",
+      "value": 40
+    }
+  ]
+}

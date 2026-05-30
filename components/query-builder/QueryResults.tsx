@@ -51,7 +51,6 @@ const FULL_MOCK_DATA: MockDataItem[] = [
 type SortKey = keyof MockDataItem;
 type SortOrder = 'asc' | 'desc' | null;
 
-// Extracted SortIcon component to satisfy linting rules (no components inside render)
 function SortIcon({ 
   column, 
   activeSortKey, 
@@ -61,11 +60,11 @@ function SortIcon({
   activeSortKey: SortKey | null; 
   sortOrder: SortOrder 
 }) {
-  if (activeSortKey !== column) return <CaretUpDown size={14} className="opacity-20" />;
+  if (activeSortKey !== column) return <CaretUpDown size={12} className="opacity-20 sm:size-3.5" />;
   return sortOrder === 'asc' ? (
-    <CaretUp size={14} className="text-accent" weight="bold" />
+    <CaretUp size={12} className="text-accent sm:size-3.5" weight="bold" />
   ) : (
-    <CaretDown size={14} className="text-accent" weight="bold" />
+    <CaretDown size={12} className="text-accent sm:size-3.5" weight="bold" />
   );
 }
 
@@ -76,7 +75,6 @@ export function QueryResults() {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
 
-  // Wait for hydration to avoid SSR mismatch with persistent store
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsHydrated(true);
@@ -103,7 +101,6 @@ export function QueryResults() {
       appliedRootGroup
     ) as unknown as MockDataItem[];
 
-    // Local Search
     if (searchTerm) {
       results = results.filter(
         (item) =>
@@ -112,12 +109,10 @@ export function QueryResults() {
       );
     }
 
-    // Sorting
     if (sortKey && sortOrder) {
       results = [...results].sort((a, b) => {
         const aVal = a[sortKey];
         const bVal = b[sortKey];
-
         if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
         return 0;
@@ -137,67 +132,67 @@ export function QueryResults() {
 
   return (
     <div className="flex flex-col h-full bg-surface/30 backdrop-blur-sm overflow-hidden min-h-[400px]">
-      <div className="flex flex-wrap items-center justify-between px-8 py-6 border-b border-border bg-background/40">
-        <div className="flex items-center gap-4">
-          <div className="p-2.5 bg-accent/10 rounded-xl border border-accent/20">
-            <ListBullets size={24} className="text-accent" weight="duotone" />
+      <div className="flex flex-wrap items-center justify-between px-3 py-4 sm:px-8 sm:py-6 border-b border-border bg-background/40 gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="p-1.5 bg-accent/10 rounded-xl border border-accent/20 sm:p-2.5">
+            <ListBullets size={18} className="text-accent sm:size-6" weight="duotone" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-base font-black text-text-primary uppercase tracking-tighter">
-              Query Inspection
+            <h3 className="text-xs font-black text-text-primary uppercase tracking-tighter sm:text-base">
+              Inspection
             </h3>
-            <div className="flex items-center gap-2">
-              <span className="text-text-secondary bg-background/50 border-border rounded border px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
-                {filteredData.length} Records Match
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-text-secondary bg-background/50 border-border rounded border px-1 py-0.5 text-[8px] font-black uppercase tracking-widest sm:text-[10px] sm:px-2">
+                {filteredData.length} Matches
               </span>
-              <span className="text-green-500 flex items-center gap-1 text-[10px] font-black uppercase tracking-widest">
-                <Circle size={8} weight="fill" className="animate-pulse" />
-                Live Simulation
+              <span className="text-green-500 flex items-center gap-1 text-[8px] font-black uppercase tracking-widest sm:text-[10px]">
+                <Circle size={6} weight="fill" className="animate-pulse" />
+                <span className="hidden xs:inline">Live</span>
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="group relative">
+        <div className="flex flex-1 items-center justify-end min-w-[140px] sm:min-w-[200px]">
+          <div className="group relative w-full sm:w-[240px]">
             <MagnifyingGlass
-              size={16}
-              className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2 transition-all opacity-50 group-focus-within:text-accent group-focus-within:opacity-100"
+              size={12}
+              className="text-text-secondary absolute top-1/2 left-2.5 -translate-y-1/2 transition-all opacity-50 group-focus-within:text-accent group-focus-within:opacity-100 sm:size-4 sm:left-3"
             />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Filter results..."
-              className="bg-background/50 border-border text-text-primary placeholder:text-text-secondary/50 h-10 w-[240px] rounded-lg border pl-10 pr-4 text-xs font-bold transition-all focus:border-accent/50 focus:ring-4 focus:ring-accent/10 focus:outline-none"
+              placeholder="Search..."
+              className="bg-background/50 border-border text-text-primary placeholder:text-text-secondary/50 h-8 w-full rounded-lg border pl-8 pr-3 text-[10px] font-bold transition-all focus:border-accent/50 focus:ring-4 focus:ring-accent/10 focus:outline-none sm:h-10 sm:pl-10 sm:pr-4 sm:text-xs"
             />
           </div>
         </div>
       </div>
 
-      <div className="theme-scrollbar flex-1 overflow-y-auto">
-        <div className="px-4 pb-4">
+      <div className="theme-scrollbar flex-1 overflow-auto">
+        <div className="min-w-[600px] px-2 pb-4 sm:px-4">
           <Table>
             <TableHeader className="bg-background/20 sticky top-0 z-10 backdrop-blur-md">
               <TableRow className="border-border hover:bg-transparent">
                 <TableHead
-                  className="py-5 pl-6 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  className="py-4 pl-4 text-[9px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors sm:py-5 sm:pl-6 sm:text-[10px]"
                   onClick={() => handleSort('id')}
                 >
                   <div className="flex items-center gap-2">
-                    Identifier <SortIcon column="id" activeSortKey={sortKey} sortOrder={sortOrder} />
+                    ID <SortIcon column="id" activeSortKey={sortKey} sortOrder={sortOrder} />
                   </div>
                 </TableHead>
                 <TableHead
-                  className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  className="py-4 text-[9px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors sm:py-5 sm:text-[10px]"
                   onClick={() => handleSort('name')}
                 >
                   <div className="flex items-center gap-2">
-                    Display Name <SortIcon column="name" activeSortKey={sortKey} sortOrder={sortOrder} />
+                    Name <SortIcon column="name" activeSortKey={sortKey} sortOrder={sortOrder} />
                   </div>
                 </TableHead>
                 <TableHead
-                  className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  className="py-4 text-[9px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors sm:py-5 sm:text-[10px]"
                   onClick={() => handleSort('age')}
                 >
                   <div className="flex items-center gap-2">
@@ -205,15 +200,15 @@ export function QueryResults() {
                   </div>
                 </TableHead>
                 <TableHead
-                  className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  className="py-4 text-[9px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors sm:py-5 sm:text-[10px]"
                   onClick={() => handleSort('status')}
                 >
                   <div className="flex items-center gap-2">
-                    Current Status <SortIcon column="status" activeSortKey={sortKey} sortOrder={sortOrder} />
+                    Status <SortIcon column="status" activeSortKey={sortKey} sortOrder={sortOrder} />
                   </div>
                 </TableHead>
                 <TableHead
-                  className="py-5 pr-6 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors"
+                  className="py-4 pr-4 text-[9px] font-black uppercase tracking-[0.2em] text-text-secondary cursor-pointer hover:text-text-primary transition-colors sm:py-5 sm:pr-6 sm:text-[10px]"
                   onClick={() => handleSort('createdAt')}
                 >
                   <div className="flex items-center gap-2">
@@ -227,11 +222,11 @@ export function QueryResults() {
                 <TableRow>
                   <TableCell colSpan={5} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 opacity-40">
-                      <Database size={48} weight="duotone" />
-                      <p className="text-sm font-bold uppercase tracking-widest">
+                      <Database size={40} weight="duotone" className="sm:size-12" />
+                      <p className="text-xs font-bold uppercase tracking-widest sm:text-sm">
                         No Matches Found
                       </p>
-                      <p className="text-xs">Adjust your query logic to see results</p>
+                      <p className="text-[10px] sm:text-xs">Adjust your query logic</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -241,20 +236,20 @@ export function QueryResults() {
                     key={row.id}
                     className="border-border/50 hover:bg-accent/5 group/row transition-all"
                   >
-                    <TableCell className="text-text-secondary py-4 pl-6 font-mono text-xs group-hover/row:text-accent transition-colors">
-                      USR-{row.id.toString().padStart(4, '0')}
+                    <TableCell className="text-text-secondary py-3 pl-4 font-mono text-[10px] group-hover/row:text-accent transition-colors sm:py-4 sm:pl-6 sm:text-xs">
+                      #{row.id.toString().padStart(4, '0')}
                     </TableCell>
-                    <TableCell className="text-text-primary py-4 text-sm font-bold">
+                    <TableCell className="text-text-primary py-3 text-xs font-bold sm:py-4 sm:text-sm">
                       {row.name}
                     </TableCell>
-                    <TableCell className="text-text-secondary py-4 text-sm font-medium">
+                    <TableCell className="text-text-secondary py-3 text-xs font-medium sm:py-4 sm:text-sm">
                       {row.age}
                     </TableCell>
-                    <TableCell className="py-4">
+                    <TableCell className="py-3 sm:py-4">
                       <Badge
                         variant="outline"
                         className={cn(
-                          'rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest transition-all',
+                          'rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest transition-all sm:px-2 sm:text-[9px]',
                           row.status === 'active'
                             ? 'border-green-500/20 bg-green-500/10 text-green-500 group-hover/row:border-green-500/50'
                             : row.status === 'inactive'
@@ -265,7 +260,7 @@ export function QueryResults() {
                         {row.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-text-secondary py-4 pr-6 font-mono text-[11px] font-bold italic opacity-60">
+                    <TableCell className="text-text-secondary py-3 pr-4 font-mono text-[10px] font-bold italic opacity-60 sm:py-4 sm:pr-6 sm:text-[11px]">
                       {row.createdAt}
                     </TableCell>
                   </TableRow>
@@ -276,22 +271,22 @@ export function QueryResults() {
         </div>
       </div>
 
-      <div className="border-border bg-background/40 flex items-center justify-between border-t px-8 py-4">
+      <div className="border-border bg-background/40 flex items-center justify-between border-t px-4 py-3 sm:px-8 sm:py-4">
         <div className="flex items-center gap-2 text-text-secondary">
-          <Database size={16} weight="duotone" className="text-accent/50" />
-          <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-50">
-            Secure Mock Database Engine
+          <Database size={14} weight="duotone" className="text-accent/50 sm:size-4" />
+          <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-50 sm:text-[9px] sm:tracking-[0.3em]">
+            Mock DB <span className="hidden xs:inline">v1.0</span>
           </span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-text-secondary text-[10px] font-black uppercase tracking-widest opacity-60">
-            Showing {filteredData.length} of {FULL_MOCK_DATA.length}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <span className="text-[9px] text-text-secondary font-black uppercase tracking-widest opacity-60 sm:text-[10px]">
+            {filteredData.length} of {FULL_MOCK_DATA.length}
           </span>
           <div className="flex gap-1">
             <Button
               variant="ghost"
               size="icon-xs"
-              className="border-border h-7 w-7 border disabled:opacity-20"
+              className="border-border h-6 w-6 border disabled:opacity-20 sm:h-7 sm:w-7"
               disabled
             >
               &lt;
@@ -299,14 +294,14 @@ export function QueryResults() {
             <Button
               variant="ghost"
               size="icon-xs"
-              className="border-border border-accent/50 text-accent h-7 w-7 border font-black"
+              className="border-border border-accent/50 text-accent h-6 w-6 border font-black sm:h-7 sm:w-7"
             >
               1
             </Button>
             <Button
               variant="ghost"
               size="icon-xs"
-              className="border-border h-7 w-7 border disabled:opacity-20"
+              className="border-border h-6 w-6 border disabled:opacity-20 sm:h-7 sm:w-7"
               disabled
             >
               &gt;
