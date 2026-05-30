@@ -20,7 +20,7 @@ export function QueryBuilder() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-text-secondary hover:text-text-primary h-10 gap-2 font-bold uppercase tracking-wider"
+            className="text-text-secondary hover:text-text-primary h-10 gap-2 font-bold tracking-wider uppercase"
             onClick={resetQuery}
           >
             <ArrowsCounterClockwise size={18} /> Reset
@@ -33,7 +33,7 @@ export function QueryBuilder() {
             variant="accent"
             size="sm"
             onClick={runQuery}
-            className="h-10 gap-2 px-6 font-black uppercase tracking-widest shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+            className="h-10 gap-2 px-6 font-black tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.2)]"
           >
             <Play size={18} weight="fill" /> Run Query
           </Button>
