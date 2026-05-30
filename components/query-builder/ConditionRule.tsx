@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 const OPERATORS_BY_TYPE: Record<FieldType, { label: string; value: Operator }[]> = {
   string: [
@@ -54,10 +55,12 @@ interface ConditionRuleProps {
 }
 
 export function ConditionRule({ rule }: ConditionRuleProps) {
-  const { schema, updateRule, removeNode } = useQueryStore();
+  const { schema, updateRule, removeNode, validationErrors } = useQueryStore();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: rule.id,
   });
+
+  const error = validationErrors[rule.id];
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -84,23 +87,38 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group bg-surface border-border hover:border-accent/40 animate-in fade-in slide-in-from-left-2 flex flex-wrap items-center gap-4 rounded-xl border p-4 shadow-sm transition-all duration-200"
+      className={cn(
+        'group/rule bg-surface border-border hover:border-accent/40 animate-in fade-in slide-in-from-left-2 flex flex-col gap-4 rounded-xl border p-3 transition-all duration-200 sm:flex-row sm:items-center sm:p-4',
+        error && 'border-destructive/50 bg-destructive/5'
+      )}
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="text-text-secondary hover:text-text-primary flex cursor-grab items-center justify-center active:cursor-grabbing"
-      >
-        <DotsSixVertical size={20} weight="bold" />
+      <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+        <div
+          {...attributes}
+          {...listeners}
+          className="text-text-secondary hover:text-text-primary flex cursor-grab items-center justify-center active:cursor-grabbing"
+        >
+          <DotsSixVertical size={20} weight="bold" />
+        </div>
+        
+        {/* Mobile Delete Button */}
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          className="text-text-secondary hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:hidden"
+          onClick={() => removeNode(rule.id)}
+        >
+          <Trash size={18} />
+        </Button>
       </div>
 
-      <div className="flex flex-1 flex-wrap items-center gap-3">
-        <div className="flex min-w-[140px] flex-1 flex-col gap-1.5">
-          <span className="text-text-secondary pl-1 text-[10px] font-black tracking-widest uppercase">
+      <div className="grid flex-1 grid-cols-1 gap-3 xs:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
+        <div className="flex flex-col gap-1.5 md:col-span-1">
+          <span className="text-text-secondary pl-1 text-[9px] font-black tracking-widest uppercase">
             Field
           </span>
           <Select value={rule.fieldId} onValueChange={handleFieldChange}>
-            <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+            <SelectTrigger className="bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10">
               <SelectValue placeholder="Select field" />
             </SelectTrigger>
             <SelectContent>
@@ -113,15 +131,15 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
           </Select>
         </div>
 
-        <div className="flex min-w-[120px] flex-1 flex-col gap-1.5">
-          <span className="text-text-secondary pl-1 text-[10px] font-black tracking-widest uppercase">
+        <div className="flex flex-col gap-1.5 md:col-span-1">
+          <span className="text-text-secondary pl-1 text-[9px] font-black tracking-widest uppercase">
             Operator
           </span>
           <Select
             value={rule.operator}
             onValueChange={(value) => updateRule(rule.id, { operator: value as Operator })}
           >
-            <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+            <SelectTrigger className="bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10">
               <SelectValue placeholder="Operator" />
             </SelectTrigger>
             <SelectContent>
@@ -134,16 +152,26 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
           </Select>
         </div>
 
-        <div className="flex min-w-[180px] flex-[2] flex-col gap-1.5">
-          <span className="text-text-secondary pl-1 text-[10px] font-black tracking-widest uppercase">
-            Value
-          </span>
+        <div className="flex flex-col gap-1.5 xs:col-span-2 md:col-span-2">
+          <div className="flex items-center justify-between pl-1">
+            <span className="text-text-secondary text-[9px] font-black tracking-widest uppercase">
+              Value
+            </span>
+            {error && (
+              <span className="text-destructive text-[8px] font-bold uppercase animate-pulse">
+                {error}
+              </span>
+            )}
+          </div>
           {currentField?.type === 'enum' ? (
             <Select
               value={rule.value as string}
               onValueChange={(value) => updateRule(rule.id, { value })}
             >
-              <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+              <SelectTrigger className={cn(
+                "bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10",
+                error && "border-destructive"
+              )}>
                 <SelectValue placeholder="Select value" />
               </SelectTrigger>
               <SelectContent>
@@ -159,7 +187,7 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
               value={String(rule.value)}
               onValueChange={(value) => updateRule(rule.id, { value: value === 'true' })}
             >
-              <SelectTrigger className="bg-background border-border h-11 w-full font-bold">
+              <SelectTrigger className="bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -169,7 +197,10 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
             </Select>
           ) : (
             <Input
-              className="bg-background border-border h-11 font-bold"
+              className={cn(
+                'bg-background border-border text-text-primary h-9 font-bold sm:h-10',
+                error && 'border-destructive focus-visible:ring-destructive/20'
+              )}
               type={currentField?.type === 'number' ? 'number' : 'text'}
               value={rule.value as string}
               onChange={(e) => updateRule(rule.id, { value: e.target.value })}
@@ -179,10 +210,11 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
         </div>
       </div>
 
+      {/* Desktop Delete Button */}
       <Button
         variant="ghost"
         size="icon"
-        className="text-text-secondary hover:text-destructive hover:bg-destructive/10 mt-5 h-10 w-10"
+        className="text-text-secondary hover:text-destructive hover:bg-destructive/10 hidden h-10 w-10 sm:flex"
         onClick={() => removeNode(rule.id)}
       >
         <Trash size={20} />
