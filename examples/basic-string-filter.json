@@ -1,0 +1,11 @@
+{
+  "logicalOperator": "AND",
+  "children": [
+    {
+      "type": "rule",
+      "fieldId": "name",
+      "operator": "contains",
+      "value": "Alice"
+    }
+  ]
+}
