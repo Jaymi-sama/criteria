@@ -13,6 +13,8 @@ interface QueryState {
   removeNode: (id: string) => void;
   updateRule: (id: string, updates: Partial<QueryRule>) => void;
   updateGroup: (id: string, updates: Partial<QueryGroup>) => void;
+  reorderChildren: (parentId: string, activeId: string, overId: string) => void;
+  importQuery: (newGroup: QueryGroup) => void;
   setSchema: (schema: Schema) => void;
   resetQuery: () => void;
 }
@@ -101,10 +103,53 @@ export const useQueryStore = create<QueryState>()(
           Object.assign(node, updates);
         }
       }),
+
+    reorderChildren: (parentId, activeId, overId) =>
+      set((state) => {
+        const parent = findNode(state.rootGroup, parentId) as QueryGroup;
+        if (parent && parent.type === 'group') {
+          const oldIndex = parent.children.findIndex((c) => c.id === activeId);
+          const newIndex = parent.children.findIndex((c) => c.id === overId);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            const [moved] = parent.children.splice(oldIndex, 1);
+            parent.children.splice(newIndex, 0, moved);
+          }
+        }
+      }),
+
+    importQuery: (newGroup) =>
+      set((state) => {
+        state.rootGroup = normalizeQueryNode(newGroup) as QueryGroup;
+      }),
   }))
 );
 
 // Helper functions for recursive traversal
+function normalizeQueryNode(node: unknown): QueryNode {
+  const data = node as Record<string, unknown>;
+  const id = (data.id as string) || uuidv4();
+
+  if (data.fieldId || data.type === 'rule') {
+    return {
+      id,
+      type: 'rule',
+      fieldId: (data.fieldId as string) || 'name',
+      operator: (data.operator as QueryRule['operator']) || 'equals',
+      value: (data.value as QueryRule['value']) ?? '',
+    };
+  }
+
+  return {
+    id,
+    type: 'group',
+    logicalOperator: (data.logicalOperator as QueryGroup['logicalOperator']) || 'AND',
+    children: Array.isArray(data.children)
+      ? data.children.map((child: unknown) => normalizeQueryNode(child))
+      : [],
+    isCollapsed: !!data.isCollapsed,
+  };
+}
+
 function findNode(node: QueryNode, id: string): QueryNode | undefined {
   if (node.id === id) return node;
   if (node.type === 'group') {

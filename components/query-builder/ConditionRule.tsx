@@ -4,6 +4,8 @@ import React from 'react';
 import { useQueryStore } from '@/lib/store';
 import { QueryRule, Operator, FieldType } from '@/types/query';
 import { Trash, DotsSixVertical } from '@phosphor-icons/react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -53,6 +55,16 @@ interface ConditionRuleProps {
 
 export function ConditionRule({ rule }: ConditionRuleProps) {
   const { schema, updateRule, removeNode } = useQueryStore();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: rule.id,
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.5 : undefined,
+  };
 
   const currentField = schema.find((f) => f.id === rule.fieldId);
   const operators = currentField ? OPERATORS_BY_TYPE[currentField.type] : [];
@@ -69,8 +81,16 @@ export function ConditionRule({ rule }: ConditionRuleProps) {
   };
 
   return (
-    <div className="group bg-surface border-border hover:border-accent/40 animate-in fade-in slide-in-from-left-2 flex flex-wrap items-center gap-4 rounded-xl border p-4 shadow-sm transition-all duration-200">
-      <div className="text-text-secondary hover:text-text-primary flex cursor-grab items-center justify-center active:cursor-grabbing">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group bg-surface border-border hover:border-accent/40 animate-in fade-in slide-in-from-left-2 flex flex-wrap items-center gap-4 rounded-xl border p-4 shadow-sm transition-all duration-200"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="text-text-secondary hover:text-text-primary flex cursor-grab items-center justify-center active:cursor-grabbing"
+      >
         <DotsSixVertical size={20} weight="bold" />
       </div>
 
