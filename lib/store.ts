@@ -4,10 +4,27 @@ import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { QueryGroup, QueryNode, QueryRule, Schema } from '@/types/query';
 import { v4 as uuidv4 } from 'uuid';
 
+interface QueryPreset {
+  id: string;
+  name: string;
+  description: string;
+  rootGroup: QueryGroup;
+}
+
+interface QueryHistoryItem {
+  id: string;
+  name: string;
+  time: string;
+  query: string;
+  rootGroup: QueryGroup;
+}
+
 interface QueryState {
   schema: Schema;
   rootGroup: QueryGroup;
   appliedRootGroup: QueryGroup;
+  presets: QueryPreset[];
+  history: QueryHistoryItem[];
 
   // Actions
   addRule: (parentId: string) => void;
@@ -20,6 +37,12 @@ interface QueryState {
   runQuery: () => void;
   setSchema: (schema: Schema) => void;
   resetQuery: () => void;
+
+  // Preset & History Actions
+  savePreset: (name: string, description: string) => void;
+  deletePreset: (id: string) => void;
+  clearHistory: () => void;
+  restoreQuery: (rootGroup: QueryGroup) => void;
 }
 
 const createDefaultRule = (fieldId: string): QueryRule => ({
@@ -54,7 +77,6 @@ const initialSchema: Schema = [
   { id: 'isVerified', label: 'Verified', type: 'boolean' },
 ];
 
-// No-op storage for environments where localStorage is not available (like Vitest/SSR)
 const noopStorage: StateStorage = {
   getItem: () => null,
   setItem: () => {},
@@ -67,6 +89,8 @@ export const useQueryStore = create<QueryState>()(
       schema: initialSchema,
       rootGroup: createDefaultGroup(),
       appliedRootGroup: createDefaultGroup(),
+      presets: [],
+      history: [],
 
       setSchema: (schema) =>
         set((state) => {
@@ -82,7 +106,20 @@ export const useQueryStore = create<QueryState>()(
 
       runQuery: () =>
         set((state) => {
-          state.appliedRootGroup = JSON.parse(JSON.stringify(state.rootGroup));
+          const currentQuery = JSON.parse(JSON.stringify(state.rootGroup));
+          state.appliedRootGroup = currentQuery;
+
+          // Add to history
+          const historyItem: QueryHistoryItem = {
+            id: uuidv4(),
+            name: `Manual Execution ${state.history.length + 1}`,
+            time: new Date().toLocaleTimeString(),
+            query: JSON.stringify(currentQuery).substring(0, 50) + '...',
+            rootGroup: currentQuery,
+          };
+
+          state.history.unshift(historyItem);
+          if (state.history.length > 10) state.history.pop();
         }),
 
       addRule: (parentId) =>
@@ -140,10 +177,39 @@ export const useQueryStore = create<QueryState>()(
         const normalized = normalizeQueryNode(newGroup) as QueryGroup;
         set({ rootGroup: normalized, appliedRootGroup: normalized });
       },
+
+      savePreset: (name, description) =>
+        set((state) => {
+          state.presets.push({
+            id: uuidv4(),
+            name,
+            description,
+            rootGroup: JSON.parse(JSON.stringify(state.rootGroup)),
+          });
+        }),
+
+      deletePreset: (id) =>
+        set((state) => {
+          state.presets = state.presets.filter((p) => p.id !== id);
+        }),
+
+      clearHistory: () =>
+        set((state) => {
+          state.history = [];
+        }),
+
+      restoreQuery: (rootGroup) =>
+        set((state) => {
+          const normalized = normalizeQueryNode(rootGroup) as QueryGroup;
+          state.rootGroup = normalized;
+          state.appliedRootGroup = normalized;
+        }),
     })),
     {
       name: 'criteria-query-storage',
-      storage: createJSONStorage(() => (typeof localStorage !== 'undefined' ? localStorage : noopStorage)),
+      storage: createJSONStorage(() =>
+        typeof localStorage !== 'undefined' ? localStorage : noopStorage
+      ),
     }
   )
 );

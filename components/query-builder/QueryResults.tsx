@@ -48,6 +48,7 @@ export function QueryResults() {
 
   // Wait for hydration to avoid SSR mismatch with persistent store
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsHydrated(true);
   }, []);
 
