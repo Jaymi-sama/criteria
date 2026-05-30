@@ -29,22 +29,22 @@ export function QueryBuilder() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-text-secondary hover:text-text-primary h-10 w-full gap-2 border border-transparent font-bold uppercase tracking-wider text-[10px] hover:border-border sm:w-auto sm:text-xs"
+                  className="text-text-secondary hover:text-text-primary h-10 w-full gap-2 border border-transparent font-bold uppercase tracking-wider text-[10px] hover:border-border sm:w-auto sm:text-xs cursor-pointer"
                   onClick={resetQuery}
                 >
                   <ArrowsCounterClockwise size={18} /> Reset
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="bg-surface border-border border px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-text-primary shadow-xl">
+              <TooltipContent className="font-bold uppercase tracking-widest">
                 Ctrl + Shift + Backspace
               </TooltipContent>
             </Tooltip>
           </div>
-        </div>
+          </div>
 
-        {/* Right Side Group (Primary) */}
-        <div className="contents sm:flex sm:items-center sm:justify-end sm:gap-3">
-          <div className="col-span-1">
+          {/* Right Side Group (Primary) */}
+          <div className="contents sm:flex sm:items-center sm:justify-end sm:gap-3">
+          <div className="w-full sm:w-auto">
             <ImportExportModal />
           </div>
           <div className="col-span-1">
@@ -54,17 +54,17 @@ export function QueryBuilder() {
                   variant="accent"
                   size="sm"
                   onClick={runQuery}
-                  className="bg-accent text-accent-foreground h-10 w-full gap-2 px-4 font-black uppercase tracking-widest text-[10px] sm:w-auto sm:px-6 sm:text-xs"
+                  className="bg-accent text-accent-foreground h-10 w-full gap-2 px-4 font-black uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(245,158,11,0.2)] sm:w-auto sm:px-6 sm:text-xs cursor-pointer"
                 >
                   <Play size={18} weight="fill" /> Run Query
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="bg-surface border-border border px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-text-primary shadow-xl">
+              <TooltipContent className="font-bold uppercase tracking-widest">
                 Ctrl + Enter
               </TooltipContent>
             </Tooltip>
           </div>
-        </div>
+          </div>
       </div>
       {/* Main Builder Canvas */}
       <div className="bg-surface/30 border-border min-h-[400px] rounded-2xl border p-4 sm:p-6 overflow-x-hidden">
