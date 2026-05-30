@@ -21,7 +21,7 @@ export function QueryPreview() {
   };
 
   return (
-    <div className="bg-surface border-border animate-in fade-in zoom-in-95 flex h-full flex-col overflow-hidden rounded-2xl border shadow-2xl duration-300">
+    <div className="bg-surface border-border animate-in fade-in zoom-in-95 flex h-full flex-col overflow-hidden rounded-2xl border duration-300">
       <div className="border-border bg-background/40 flex items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-sm">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="bg-accent/10 rounded-lg p-1.5 sm:p-2">
