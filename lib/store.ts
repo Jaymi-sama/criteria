@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { QueryGroup, QueryNode, QueryRule, Schema } from '@/types/query';
 import { v4 as uuidv4 } from 'uuid';
 
 interface QueryState {
   schema: Schema;
   rootGroup: QueryGroup;
+  appliedRootGroup: QueryGroup;
 
   // Actions
   addRule: (parentId: string) => void;
@@ -15,6 +17,7 @@ interface QueryState {
   updateGroup: (id: string, updates: Partial<QueryGroup>) => void;
   reorderChildren: (parentId: string, activeId: string, overId: string) => void;
   importQuery: (newGroup: QueryGroup) => void;
+  runQuery: () => void;
   setSchema: (schema: Schema) => void;
   resetQuery: () => void;
 }
@@ -51,81 +54,105 @@ const initialSchema: Schema = [
   { id: 'isVerified', label: 'Verified', type: 'boolean' },
 ];
 
+// No-op storage for environments where localStorage is not available (like Vitest/SSR)
+const noopStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
+
 export const useQueryStore = create<QueryState>()(
-  immer((set) => ({
-    schema: initialSchema,
-    rootGroup: createDefaultGroup(),
+  persist(
+    immer((set) => ({
+      schema: initialSchema,
+      rootGroup: createDefaultGroup(),
+      appliedRootGroup: createDefaultGroup(),
 
-    setSchema: (schema) =>
-      set((state) => {
-        state.schema = schema;
-      }),
+      setSchema: (schema) =>
+        set((state) => {
+          state.schema = schema;
+        }),
 
-    resetQuery: () =>
-      set((state) => {
-        state.rootGroup = createDefaultGroup();
-      }),
+      resetQuery: () =>
+        set((state) => {
+          const fresh = createDefaultGroup();
+          state.rootGroup = fresh;
+          state.appliedRootGroup = fresh;
+        }),
 
-    addRule: (parentId) =>
-      set((state) => {
-        const parent = findNode(state.rootGroup, parentId) as QueryGroup;
-        if (parent && parent.type === 'group') {
-          parent.children.push(createDefaultRule(state.schema[0].id));
-        }
-      }),
+      runQuery: () =>
+        set((state) => {
+          state.appliedRootGroup = JSON.parse(JSON.stringify(state.rootGroup));
+        }),
 
-    addGroup: (parentId) =>
-      set((state) => {
-        const parent = findNode(state.rootGroup, parentId) as QueryGroup;
-        if (parent && parent.type === 'group') {
-          parent.children.push(createDefaultGroup());
-        }
-      }),
-
-    removeNode: (id) =>
-      set((state) => {
-        if (state.rootGroup.id === id) return; // Can't remove root
-        removeNodeRecursive(state.rootGroup, id);
-      }),
-
-    updateRule: (id, updates) =>
-      set((state) => {
-        const node = findNode(state.rootGroup, id) as QueryRule;
-        if (node && node.type === 'rule') {
-          Object.assign(node, updates);
-        }
-      }),
-
-    updateGroup: (id, updates) =>
-      set((state) => {
-        const node = findNode(state.rootGroup, id) as QueryGroup;
-        if (node && node.type === 'group') {
-          Object.assign(node, updates);
-        }
-      }),
-
-    reorderChildren: (parentId, activeId, overId) =>
-      set((state) => {
-        const parent = findNode(state.rootGroup, parentId) as QueryGroup;
-        if (parent && parent.type === 'group') {
-          const oldIndex = parent.children.findIndex((c) => c.id === activeId);
-          const newIndex = parent.children.findIndex((c) => c.id === overId);
-          if (oldIndex !== -1 && newIndex !== -1) {
-            const [moved] = parent.children.splice(oldIndex, 1);
-            parent.children.splice(newIndex, 0, moved);
+      addRule: (parentId) =>
+        set((state) => {
+          const parent = findNode(state.rootGroup, parentId) as QueryGroup;
+          if (parent && parent.type === 'group') {
+            parent.children.push(createDefaultRule(state.schema[0].id));
           }
-        }
-      }),
+        }),
 
-    importQuery: (newGroup) =>
-      set((state) => {
-        state.rootGroup = normalizeQueryNode(newGroup) as QueryGroup;
-      }),
-  }))
+      addGroup: (parentId) =>
+        set((state) => {
+          const parent = findNode(state.rootGroup, parentId) as QueryGroup;
+          if (parent && parent.type === 'group') {
+            parent.children.push(createDefaultGroup());
+          }
+        }),
+
+      removeNode: (id) =>
+        set((state) => {
+          if (state.rootGroup.id === id) return;
+          removeNodeRecursive(state.rootGroup, id);
+        }),
+
+      updateRule: (id, updates) =>
+        set((state) => {
+          const node = findNode(state.rootGroup, id) as QueryRule;
+          if (node && node.type === 'rule') {
+            Object.assign(node, updates);
+          }
+        }),
+
+      updateGroup: (id, updates) =>
+        set((state) => {
+          const node = findNode(state.rootGroup, id) as QueryGroup;
+          if (node && node.type === 'group') {
+            Object.assign(node, updates);
+          }
+        }),
+
+      reorderChildren: (parentId, activeId, overId) =>
+        set((state) => {
+          const parent = findNode(state.rootGroup, parentId) as QueryGroup;
+          if (parent && parent.type === 'group') {
+            const oldIndex = parent.children.findIndex((c) => c.id === activeId);
+            const newIndex = parent.children.findIndex((c) => c.id === overId);
+            if (oldIndex !== -1 && newIndex !== -1) {
+              const [moved] = parent.children.splice(oldIndex, 1);
+              parent.children.splice(newIndex, 0, moved);
+            }
+          }
+        }),
+
+      importQuery: (newGroup) => {
+        const normalized = normalizeQueryNode(newGroup) as QueryGroup;
+        set({ rootGroup: normalized, appliedRootGroup: normalized });
+      },
+    })),
+    {
+      name: 'criteria-query-storage',
+      storage: createJSONStorage(() => (typeof localStorage !== 'undefined' ? localStorage : noopStorage)),
+    }
+  )
 );
 
-// Helper functions for recursive traversal
 function normalizeQueryNode(node: unknown): QueryNode {
+  if (!node || typeof node !== 'object') {
+    return createDefaultGroup();
+  }
+
   const data = node as Record<string, unknown>;
   const id = (data.id as string) || uuidv4();
 
@@ -139,13 +166,15 @@ function normalizeQueryNode(node: unknown): QueryNode {
     };
   }
 
+  const children = Array.isArray(data.children)
+    ? data.children.map((child: unknown) => normalizeQueryNode(child))
+    : [];
+
   return {
     id,
     type: 'group',
     logicalOperator: (data.logicalOperator as QueryGroup['logicalOperator']) || 'AND',
-    children: Array.isArray(data.children)
-      ? data.children.map((child: unknown) => normalizeQueryNode(child))
-      : [],
+    children,
     isCollapsed: !!data.isCollapsed,
   };
 }

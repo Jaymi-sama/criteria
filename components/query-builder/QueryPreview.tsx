@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Copy, TerminalWindow, Database, Code, Check } from '@phosphor-icons/react';
 
 export function QueryPreview() {
-  const { rootGroup, schema } = useQueryStore();
+  const { appliedRootGroup, schema } = useQueryStore();
   const [copied, setCopied] = React.useState(false);
 
-  const sql = generateSQL(rootGroup, schema) || '-- No conditions applied';
-  const mongo = JSON.stringify(generateMongo(rootGroup), null, 2);
+  const sql = generateSQL(appliedRootGroup, schema) || '-- No conditions applied';
+  const mongo = JSON.stringify(generateMongo(appliedRootGroup), null, 2);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -66,7 +66,7 @@ export function QueryPreview() {
             >
               {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
             </Button>
-            <pre className="scrollbar-hide h-full overflow-auto pr-4">
+            <pre className="theme-scrollbar h-full overflow-y-auto pr-4">
               <code className="text-accent selection:bg-accent/30 block min-h-full">{sql}</code>
             </pre>
           </TabsContent>
@@ -79,7 +79,7 @@ export function QueryPreview() {
             >
               {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
             </Button>
-            <pre className="scrollbar-hide h-full overflow-auto pr-4">
+            <pre className="theme-scrollbar h-full overflow-y-auto pr-4">
               <code className="text-text-primary selection:bg-accent/30 block min-h-full">
                 {mongo}
               </code>
