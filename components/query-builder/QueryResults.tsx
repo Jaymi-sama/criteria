@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useQueryStore } from '@/lib/store';
 import { executeQuery } from '@/lib/query-executor';
 import {
@@ -43,16 +43,22 @@ const FULL_MOCK_DATA: MockDataItem[] = [
 
 export function QueryResults() {
   const { appliedRootGroup } = useQueryStore();
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Wait for hydration to avoid SSR mismatch with persistent store
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const filteredData = useMemo(() => {
-    // Cast dataset to unknown[] to match executeQuery signature
+    if (!isHydrated) return FULL_MOCK_DATA;
+
     const results = executeQuery(
       FULL_MOCK_DATA as unknown as Record<string, unknown>[],
       appliedRootGroup
     );
     
-    // Cast results back to MockDataItem[] for safe property access
     const typedResults = results as unknown as MockDataItem[];
     
     if (!searchTerm) return typedResults;
@@ -61,7 +67,15 @@ export function QueryResults() {
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.id.toString().includes(searchTerm)
     );
-  }, [appliedRootGroup, searchTerm]);
+  }, [appliedRootGroup, searchTerm, isHydrated]);
+
+  if (!isHydrated) {
+    return (
+      <div className="flex h-[400px] w-full items-center justify-center bg-surface/30 backdrop-blur-sm">
+        <Circle size={24} className="animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-surface/30 backdrop-blur-sm overflow-hidden min-h-[400px]">

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { QueryGroup, QueryNode, QueryRule, Schema } from '@/types/query';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -54,6 +54,13 @@ const initialSchema: Schema = [
   { id: 'isVerified', label: 'Verified', type: 'boolean' },
 ];
 
+// No-op storage for environments where localStorage is not available (like Vitest/SSR)
+const noopStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
+
 export const useQueryStore = create<QueryState>()(
   persist(
     immer((set) => ({
@@ -75,7 +82,6 @@ export const useQueryStore = create<QueryState>()(
 
       runQuery: () =>
         set((state) => {
-          // Sync current draft to the applied state
           state.appliedRootGroup = JSON.parse(JSON.stringify(state.rootGroup));
         }),
 
@@ -97,7 +103,7 @@ export const useQueryStore = create<QueryState>()(
 
       removeNode: (id) =>
         set((state) => {
-          if (state.rootGroup.id === id) return; // Can't remove root
+          if (state.rootGroup.id === id) return;
           removeNodeRecursive(state.rootGroup, id);
         }),
 
@@ -137,12 +143,11 @@ export const useQueryStore = create<QueryState>()(
     })),
     {
       name: 'criteria-query-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => (typeof localStorage !== 'undefined' ? localStorage : noopStorage)),
     }
   )
 );
 
-// Helper functions for recursive traversal
 function normalizeQueryNode(node: unknown): QueryNode {
   if (!node || typeof node !== 'object') {
     return createDefaultGroup();
