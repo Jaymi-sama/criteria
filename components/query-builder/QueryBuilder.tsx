@@ -9,7 +9,7 @@ import { AdvancedInteractions } from './AdvancedInteractions';
 import { ImportExportModal } from './ImportExportModal';
 
 export function QueryBuilder() {
-  const { rootGroup, resetQuery } = useQueryStore();
+  const { rootGroup, resetQuery, runQuery } = useQueryStore();
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -20,7 +20,7 @@ export function QueryBuilder() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-text-secondary hover:text-text-primary h-10 gap-2 font-bold tracking-wider uppercase"
+            className="text-text-secondary hover:text-text-primary h-10 gap-2 font-bold uppercase tracking-wider"
             onClick={resetQuery}
           >
             <ArrowsCounterClockwise size={18} /> Reset
@@ -32,7 +32,8 @@ export function QueryBuilder() {
           <Button
             variant="accent"
             size="sm"
-            className="h-10 gap-2 px-6 font-black tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+            onClick={runQuery}
+            className="h-10 gap-2 px-6 font-black uppercase tracking-widest shadow-[0_0_20px_rgba(245,158,11,0.2)]"
           >
             <Play size={18} weight="fill" /> Run Query
           </Button>

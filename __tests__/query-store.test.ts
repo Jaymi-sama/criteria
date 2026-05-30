@@ -1,6 +1,25 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useQueryStore } from '@/lib/store';
 import { QueryRule } from '@/types/query';
+
+// Mock localStorage for Vitest environment
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString();
+    },
+    clear: () => {
+      store = {};
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+  };
+})();
+
+vi.stubGlobal('localStorage', localStorageMock);
 
 describe('useQueryStore', () => {
   beforeEach(() => {
