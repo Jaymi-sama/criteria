@@ -6,16 +6,16 @@ test('query builder UI loads and allows adding rules', async ({ page }) => {
   // Verify the main header
   await expect(page.locator('h1')).toHaveText('Criteria');
 
-  // Verify the sections are present
-  await expect(page.getByRole('heading', { name: /^Editor$/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /^Preview$/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /^Inspection$/i })).toBeVisible();
+  // Verify the sections are present (using specific levels to avoid ambiguity)
+  await expect(page.getByRole('heading', { name: /^Editor$/i, level: 2 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Preview$/i, level: 2 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Inspection$/i, level: 2 })).toBeVisible();
 
   // Verify the archive button is present
   await expect(page.getByRole('button', { name: /Archive/i })).toBeVisible();
 
-  // Test adding a rule
-  const addRuleButton = page.getByRole('button', { name: /Add Rule/i });
+  // Test adding a rule (using a more flexible selector)
+  const addRuleButton = page.getByRole('button').filter({ hasText: /Add Rule/i });
   await expect(addRuleButton).toBeVisible();
 
   await addRuleButton.click();
@@ -29,7 +29,7 @@ test('surfaces validation errors when running an invalid query', async ({ page }
   await page.goto('/');
   
   // Add a rule but leave the value empty
-  const addRuleButton = page.getByRole('button', { name: /Add Rule/i });
+  const addRuleButton = page.getByRole('button').filter({ hasText: /Add Rule/i });
   await addRuleButton.click();
   
   // Try to run the query
@@ -47,7 +47,7 @@ test('surfaces validation errors when running an invalid query', async ({ page }
 test('allows reordering rules via drag and drop', async ({ page }) => {
   await page.goto('/');
 
-  const addRuleButton = page.getByRole('button', { name: /Add Rule/i });
+  const addRuleButton = page.getByRole('button').filter({ hasText: /Add Rule/i });
   await addRuleButton.click();
   await addRuleButton.click(); // Add two rules
 
