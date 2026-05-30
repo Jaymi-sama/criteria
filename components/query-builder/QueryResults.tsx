@@ -8,14 +8,11 @@ import {
   Funnel,
   CaretUp,
   CaretDown,
-  Info,
-  CheckCircle,
   Database,
-  ArrowRight,
+  CheckCircle,
 } from '@phosphor-icons/react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 // Mock Data Type
@@ -26,7 +23,6 @@ interface MockDataItem {
   status: 'active' | 'inactive' | 'pending';
   createdAt: string;
   isVerified: boolean;
-  [key: string]: unknown;
 }
 
 const FULL_MOCK_DATA: MockDataItem[] = [
@@ -53,7 +49,10 @@ export function QueryResults() {
 
   // Fix for hydration mismatches with persistent state
   useEffect(() => {
-    setIsHydrated(true);
+    const handle = requestAnimationFrame(() => {
+      setIsHydrated(true);
+    });
+    return () => cancelAnimationFrame(handle);
   }, []);
 
   const handleSort = (key: keyof MockDataItem) => {
@@ -89,8 +88,12 @@ export function QueryResults() {
       results = [...results].sort((a, b) => {
         const aVal = a[sortKey];
         const bVal = b[sortKey];
-        if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+        }
         return 0;
       });
     }
@@ -247,28 +250,6 @@ export function QueryResults() {
             </tbody>
           </table>
         </div>
-        
-        {/* Floating Indicator */}
-        <div className="border-border pointer-events-none absolute right-4 bottom-4 flex items-center gap-2 rounded-lg border bg-background/80 p-2 py-1.5 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
-          <Info size={14} className="text-accent" />
-          <span className="text-text-secondary text-[9px] font-black uppercase tracking-widest">
-            Native Scroll Enabled
-          </span>
-        </div>
-      </div>
-
-      <div className="bg-accent/5 border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border p-4 sm:p-5 gap-3">
-        <div className="flex items-center gap-3">
-          <Badge className="bg-accent text-accent-foreground text-[10px] font-black uppercase tracking-widest">
-            Pro Tip
-          </Badge>
-          <p className="text-text-secondary text-[11px] font-medium sm:text-xs">
-            Complex recursive groups are evaluated using the high-performance logic engine.
-          </p>
-        </div>
-        <Button variant="link" size="sm" className="text-accent hover:text-accent/80 font-black uppercase tracking-widest h-auto p-0 w-fit">
-          Learn More <ArrowRight size={14} className="ml-1.5" />
-        </Button>
       </div>
     </div>
   );
