@@ -1,6 +1,9 @@
 import { QueryNode, QueryRule } from '@/types/query';
 
-export function executeQuery(data: Record<string, unknown>[], node: QueryNode): Record<string, unknown>[] {
+export function executeQuery(
+  data: Record<string, unknown>[],
+  node: QueryNode
+): Record<string, unknown>[] {
   if (data.length === 0) return [];
 
   return data.filter((item) => evaluateNode(item, node));
@@ -52,7 +55,9 @@ function evaluateRule(item: Record<string, unknown>, rule: QueryRule): boolean {
     case 'is_not_null':
       return value !== null && value !== undefined && value !== '';
     case 'in': {
-      const array = String(target).split(',').map((s) => s.trim().toLowerCase());
+      const array = String(target)
+        .split(',')
+        .map((s) => s.trim().toLowerCase());
       return array.includes(String(value).toLowerCase());
     }
     case 'regex':
@@ -66,4 +71,3 @@ function evaluateRule(item: Record<string, unknown>, rule: QueryRule): boolean {
       return true;
   }
 }
-

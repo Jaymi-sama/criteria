@@ -12,7 +12,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ListBullets, Database, Circle, MagnifyingGlass } from '@phosphor-icons/react';
@@ -48,6 +47,7 @@ export function QueryResults() {
 
   // Wait for hydration to avoid SSR mismatch with persistent store
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsHydrated(true);
   }, []);
 
@@ -58,70 +58,86 @@ export function QueryResults() {
       FULL_MOCK_DATA as unknown as Record<string, unknown>[],
       appliedRootGroup
     );
-    
+
     const typedResults = results as unknown as MockDataItem[];
-    
+
     if (!searchTerm) return typedResults;
 
-    return typedResults.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.id.toString().includes(searchTerm)
+    return typedResults.filter(
+      (item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.id.toString().includes(searchTerm)
     );
   }, [appliedRootGroup, searchTerm, isHydrated]);
 
   if (!isHydrated) {
     return (
-      <div className="flex h-[400px] w-full items-center justify-center bg-surface/30 backdrop-blur-sm">
-        <Circle size={24} className="animate-spin text-accent" />
+      <div className="bg-surface/30 flex h-[400px] w-full items-center justify-center backdrop-blur-sm">
+        <Circle size={24} className="text-accent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface/30 backdrop-blur-sm overflow-hidden min-h-[400px]">
-      <div className="flex flex-wrap items-center justify-between px-8 py-6 border-b border-border bg-background/40">
+    <div className="bg-surface/30 flex h-full min-h-[400px] flex-col overflow-hidden backdrop-blur-sm">
+      <div className="border-border bg-background/40 flex flex-wrap items-center justify-between border-b px-8 py-6">
         <div className="flex items-center gap-4">
-          <div className="p-2.5 bg-accent/10 rounded-xl border border-accent/20">
+          <div className="bg-accent/10 border-accent/20 rounded-xl border p-2.5">
             <ListBullets size={24} className="text-accent" weight="duotone" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-base font-black text-text-primary uppercase tracking-tighter">Query Inspection</h3>
+            <h3 className="text-text-primary text-base font-black tracking-tighter uppercase">
+              Query Inspection
+            </h3>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-text-secondary font-black uppercase tracking-widest bg-background/50 px-2 py-0.5 rounded border border-border">
+              <span className="text-text-secondary bg-background/50 border-border rounded border px-2 py-0.5 text-[10px] font-black tracking-widest uppercase">
                 {filteredData.length} Records Match
               </span>
-              <span className="text-[10px] text-green-500 font-black uppercase tracking-widest flex items-center gap-1">
+              <span className="flex items-center gap-1 text-[10px] font-black tracking-widest text-green-500 uppercase">
                 <Circle size={8} weight="fill" className="animate-pulse" />
                 Live Simulation
               </span>
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
-           <div className="relative group">
-              <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary opacity-50 group-focus-within:text-accent group-focus-within:opacity-100 transition-all" />
-              <input 
-                type="text" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Filter results..."
-                className="bg-background/50 border border-border rounded-lg pl-10 pr-4 py-2 text-xs font-bold text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10 transition-all w-[240px]"
-              />
-           </div>
+          <div className="group relative">
+            <MagnifyingGlass
+              size={16}
+              className="text-text-secondary group-focus-within:text-accent absolute top-1/2 left-3 -translate-y-1/2 opacity-50 transition-all group-focus-within:opacity-100"
+            />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Filter results..."
+              className="bg-background/50 border-border text-text-primary placeholder:text-text-secondary/50 focus:border-accent/50 focus:ring-accent/10 w-[240px] rounded-lg border py-2 pr-4 pl-10 text-xs font-bold transition-all focus:ring-4 focus:outline-none"
+            />
+          </div>
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div className="theme-scrollbar flex-1 overflow-y-auto">
         <div className="px-4 pb-4">
           <Table>
             <TableHeader className="bg-background/20 sticky top-0 z-10 backdrop-blur-md">
-              <TableRow className="hover:bg-transparent border-border">
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary py-5 pl-6">Identifier</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary py-5">Display Name</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary py-5">Age</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary py-5">Current Status</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary py-5 pr-6">Timestamp</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-text-secondary py-5 pl-6 text-[10px] font-black tracking-[0.2em] uppercase">
+                  Identifier
+                </TableHead>
+                <TableHead className="text-text-secondary py-5 text-[10px] font-black tracking-[0.2em] uppercase">
+                  Display Name
+                </TableHead>
+                <TableHead className="text-text-secondary py-5 text-[10px] font-black tracking-[0.2em] uppercase">
+                  Age
+                </TableHead>
+                <TableHead className="text-text-secondary py-5 text-[10px] font-black tracking-[0.2em] uppercase">
+                  Current Status
+                </TableHead>
+                <TableHead className="text-text-secondary py-5 pr-6 text-[10px] font-black tracking-[0.2em] uppercase">
+                  Timestamp
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -130,35 +146,44 @@ export function QueryResults() {
                   <TableCell colSpan={5} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 opacity-40">
                       <Database size={48} weight="duotone" />
-                      <p className="text-sm font-bold uppercase tracking-widest">No Matches Found</p>
+                      <p className="text-sm font-bold tracking-widest uppercase">
+                        No Matches Found
+                      </p>
                       <p className="text-xs">Adjust your query logic to see results</p>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredData.map((row) => (
-                  <TableRow key={row.id} className="border-border/50 hover:bg-accent/5 transition-all group/row">
-                    <TableCell className="font-mono text-xs text-text-secondary py-4 pl-6 group-hover/row:text-accent transition-colors">
+                  <TableRow
+                    key={row.id}
+                    className="border-border/50 hover:bg-accent/5 group/row transition-all"
+                  >
+                    <TableCell className="text-text-secondary group-hover/row:text-accent py-4 pl-6 font-mono text-xs transition-colors">
                       USR-{row.id.toString().padStart(4, '0')}
                     </TableCell>
-                    <TableCell className="text-sm font-bold text-text-primary py-4">{row.name}</TableCell>
-                    <TableCell className="text-sm font-medium text-text-secondary py-4">{row.age}</TableCell>
+                    <TableCell className="text-text-primary py-4 text-sm font-bold">
+                      {row.name}
+                    </TableCell>
+                    <TableCell className="text-text-secondary py-4 text-sm font-medium">
+                      {row.age}
+                    </TableCell>
                     <TableCell className="py-4">
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={cn(
-                          "rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest transition-all",
-                          row.status === 'active' 
-                            ? 'border-green-500/20 bg-green-500/10 text-green-500 group-hover/row:border-green-500/50' 
+                          'rounded-md px-2 py-0.5 text-[9px] font-black tracking-widest uppercase transition-all',
+                          row.status === 'active'
+                            ? 'border-green-500/20 bg-green-500/10 text-green-500 group-hover/row:border-green-500/50'
                             : row.status === 'inactive'
-                            ? 'border-red-500/20 bg-red-500/10 text-red-500 group-hover/row:border-red-500/50'
-                            : 'border-yellow-500/20 bg-yellow-500/10 text-yellow-500 group-hover/row:border-yellow-500/50'
+                              ? 'border-red-500/20 bg-red-500/10 text-red-500 group-hover/row:border-red-500/50'
+                              : 'border-yellow-500/20 bg-yellow-500/10 text-yellow-500 group-hover/row:border-yellow-500/50'
                         )}
                       >
                         {row.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-[11px] font-bold text-text-secondary py-4 pr-6 opacity-60 font-mono italic">
+                    <TableCell className="text-text-secondary py-4 pr-6 font-mono text-[11px] font-bold italic opacity-60">
                       {row.createdAt}
                     </TableCell>
                   </TableRow>
@@ -167,21 +192,43 @@ export function QueryResults() {
             </TableBody>
           </Table>
         </div>
-      </ScrollArea>
+      </div>
 
-      <div className="px-8 py-4 border-t border-border bg-background/40 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-text-secondary">
+      <div className="border-border bg-background/40 flex items-center justify-between border-t px-8 py-4">
+        <div className="text-text-secondary flex items-center gap-2">
           <Database size={16} weight="duotone" className="text-accent/50" />
-          <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-50">Secure Mock Database Engine</span>
+          <span className="text-[9px] font-black tracking-[0.3em] uppercase opacity-50">
+            Secure Mock Database Engine
+          </span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-[10px] text-text-secondary font-black uppercase tracking-widest opacity-60">
+          <span className="text-text-secondary text-[10px] font-black tracking-widest uppercase opacity-60">
             Showing {filteredData.length} of {FULL_MOCK_DATA.length}
           </span>
           <div className="flex gap-1">
-             <Button variant="ghost" size="icon-xs" className="h-7 w-7 border border-border disabled:opacity-20" disabled>&lt;</Button>
-             <Button variant="ghost" size="icon-xs" className="h-7 w-7 border border-border border-accent/50 text-accent font-black">1</Button>
-             <Button variant="ghost" size="icon-xs" className="h-7 w-7 border border-border disabled:opacity-20" disabled>&gt;</Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="border-border h-7 w-7 border disabled:opacity-20"
+              disabled
+            >
+              &lt;
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="border-border border-accent/50 text-accent h-7 w-7 border font-black"
+            >
+              1
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="border-border h-7 w-7 border disabled:opacity-20"
+              disabled
+            >
+              &gt;
+            </Button>
           </div>
         </div>
       </div>

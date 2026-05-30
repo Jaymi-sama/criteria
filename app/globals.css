@@ -110,3 +110,31 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+/* Global Scrollbar Overrides - Outside Layers for Absolute Priority */
+*::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+*::-webkit-scrollbar-track {
+  background-color: #161b26 !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #242c3d !important;
+  border-radius: 20px !important;
+  border: 2px solid #161b26 !important;
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #f59e0b !important;
+  border-color: #242c3d !important;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin !important;
+  scrollbar-color: #242c3d #161b26 !important;
+}

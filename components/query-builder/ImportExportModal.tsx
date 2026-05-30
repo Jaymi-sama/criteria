@@ -86,7 +86,7 @@ export function ImportExportModal() {
         <Button
           variant="outline"
           size="sm"
-          className="text-text-secondary hover:text-text-primary border-border h-10 gap-2 font-bold uppercase tracking-wider"
+          className="text-text-secondary hover:text-text-primary border-border h-10 gap-2 font-bold tracking-wider uppercase"
         >
           <DownloadSimple size={18} weight="duotone" />
           Import / Export
@@ -94,7 +94,7 @@ export function ImportExportModal() {
       </DialogTrigger>
       <DialogContent className="bg-surface border-border flex max-h-[90vh] flex-col overflow-hidden rounded-xl border p-0 sm:max-w-2xl">
         <DialogHeader className="border-border bg-background/30 border-b p-6">
-          <DialogTitle className="text-text-primary flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+          <DialogTitle className="text-text-primary flex items-center gap-2 text-xl font-bold tracking-tight uppercase">
             <UploadSimple size={24} className="text-accent" weight="duotone" />
             Query JSON
           </DialogTitle>
@@ -103,7 +103,7 @@ export function ImportExportModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="theme-scrollbar min-h-0 flex-1 overflow-y-auto">
           <div className="flex flex-col gap-6 p-8">
             <div className="group relative">
               <Textarea
@@ -116,7 +116,7 @@ export function ImportExportModal() {
                 variant="ghost"
                 size="sm"
                 onClick={handleCopy}
-                className="bg-surface border-border absolute top-3 right-3 h-8 gap-2 border opacity-0 transition-opacity group-hover:opacity-100 shadow-xl"
+                className="bg-surface border-border absolute top-3 right-3 h-8 gap-2 border opacity-0 shadow-xl transition-opacity group-hover:opacity-100"
               >
                 {copied ? (
                   <>
@@ -132,22 +132,22 @@ export function ImportExportModal() {
               </Button>
             </div>
 
-            <div 
+            <div
               onClick={handleUploadClick}
-              className="bg-accent/5 border-accent/20 hover:bg-accent/10 hover:border-accent/40 flex cursor-pointer items-center gap-4 rounded-xl border border-dashed p-3 transition-all group"
+              className="bg-accent/5 border-accent/20 hover:bg-accent/10 hover:border-accent/40 group flex cursor-pointer items-center gap-4 rounded-xl border border-dashed p-3 transition-all"
             >
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept=".json" 
-                className="hidden" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept=".json"
+                className="hidden"
               />
               <div className="bg-accent/20 rounded-lg p-2 transition-transform group-hover:scale-105">
                 <FileText size={18} className="text-accent" weight="duotone" />
               </div>
               <div className="flex flex-col text-left">
-                <span className="text-text-primary text-[11px] font-black uppercase tracking-widest">
+                <span className="text-text-primary text-[11px] font-black tracking-widest uppercase">
                   Import JSON File
                 </span>
                 <span className="text-text-secondary text-[10px] font-medium opacity-60">
@@ -164,12 +164,15 @@ export function ImportExportModal() {
           </span>
           <div className="flex gap-3">
             <DialogClose asChild>
-              <Button variant="outline" className="border-border h-10 font-bold uppercase tracking-wider">
+              <Button
+                variant="outline"
+                className="border-border h-10 font-bold tracking-wider uppercase"
+              >
                 Cancel
               </Button>
             </DialogClose>
-            <Button 
-              className="bg-accent text-accent-foreground h-10 px-6 font-black uppercase tracking-widest"
+            <Button
+              className="bg-accent text-accent-foreground h-10 px-6 font-black tracking-widest uppercase"
               onClick={handleApplyImport}
             >
               Apply Import
