@@ -75,8 +75,8 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-border mt-auto w-full border-t bg-surface/30 py-6 text-center">
-        <p className="text-text-secondary text-xs font-bold tracking-widest uppercase">
-          High Precision Query Builder &bull; Built with Next.js 16
+        <p className="text-text-secondary text-xs font-bold uppercase tracking-widest">
+          High Precision Query Builder &bull; Built for performance
         </p>
       </footer>
     </div>
