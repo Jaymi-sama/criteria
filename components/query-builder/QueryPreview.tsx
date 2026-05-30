@@ -9,15 +9,16 @@ import { cn } from '@/lib/utils';
 
 export function QueryPreview() {
   const appliedRootGroup = useQueryStore((s) => s.appliedRootGroup);
+  const schema = useQueryStore((s) => s.schema);
   const [activeTab, setActiveTab] = useState('sql');
   const [copied, setCopied] = useState(false);
 
   const { sql, mongo } = useMemo(() => {
     return {
-      sql: generateSQL(appliedRootGroup),
+      sql: generateSQL(appliedRootGroup, schema),
       mongo: JSON.stringify(generateMongo(appliedRootGroup), null, 2),
     };
-  }, [appliedRootGroup]);
+  }, [appliedRootGroup, schema]);
 
   const handleCopy = async () => {
     const text = activeTab === 'sql' ? sql : mongo;
@@ -82,9 +83,9 @@ export function QueryPreview() {
         </button>
       </div>
 
-      <div className="theme-scrollbar relative flex-1 overflow-auto bg-[#0d1117] p-4 sm:p-6 font-mono selection:bg-accent/30">
+      <div className="theme-scrollbar relative flex-1 overflow-auto bg-muted/30 p-4 sm:p-6 font-mono selection:bg-accent/30">
         <pre className="text-[11px] sm:text-[13px] leading-relaxed">
-          <code className="text-[#e6edf3]">
+          <code className="text-text-primary">
             {activeTab === 'sql' ? (
               <span className="animate-in fade-in duration-500">{sql}</span>
             ) : (
