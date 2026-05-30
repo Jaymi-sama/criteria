@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { useQueryStore } from '@/lib/store';
 import { QueryGroup, LogicalOperator } from '@/types/query';
 import {
@@ -43,9 +43,15 @@ interface ConditionGroupProps {
   depth?: number;
 }
 
-export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
-  const { addRule, addGroup, removeNode, updateGroup, rootGroup, reorderChildren, validationErrors } =
-    useQueryStore();
+export const ConditionGroup = memo(({ group, depth = 0 }: ConditionGroupProps) => {
+  const addRule = useQueryStore((s) => s.addRule);
+  const addGroup = useQueryStore((s) => s.addGroup);
+  const removeNode = useQueryStore((s) => s.removeNode);
+  const updateGroup = useQueryStore((s) => s.updateGroup);
+  const rootGroupId = useQueryStore((s) => s.rootGroup.id);
+  const reorderChildren = useQueryStore((s) => s.reorderChildren);
+  const validationErrors = useQueryStore((s) => s.validationErrors);
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: group.id,
   });
@@ -59,19 +65,41 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
     opacity: isDragging ? 0.5 : undefined,
   };
 
-  const isRoot = group.id === rootGroup.id;
+  const isRoot = group.id === rootGroupId;
   const isCollapsed = group.isCollapsed ?? false;
 
-  const toggleCollapse = () => {
+  const toggleCollapse = useCallback(() => {
     updateGroup(group.id, { isCollapsed: !isCollapsed });
-  };
+  }, [group.id, isCollapsed, updateGroup]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      reorderChildren(group.id, active.id as string, over.id as string);
-    }
-  };
+  const handleLogicalOperatorChange = useCallback(
+    (value: string) => {
+      updateGroup(group.id, { logicalOperator: value as LogicalOperator });
+    },
+    [group.id, updateGroup]
+  );
+
+  const handleAddRule = useCallback(() => {
+    addRule(group.id);
+  }, [group.id, addRule]);
+
+  const handleAddGroup = useCallback(() => {
+    addGroup(group.id);
+  }, [group.id, addGroup]);
+
+  const handleRemove = useCallback(() => {
+    removeNode(group.id);
+  }, [group.id, removeNode]);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        reorderChildren(group.id, active.id as string, over.id as string);
+      }
+    },
+    [group.id, reorderChildren]
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -123,12 +151,7 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
             )}
           </Button>
 
-          <Select
-            value={group.logicalOperator}
-            onValueChange={(value) =>
-              updateGroup(group.id, { logicalOperator: value as LogicalOperator })
-            }
-          >
+          <Select value={group.logicalOperator} onValueChange={handleLogicalOperatorChange}>
             <SelectTrigger className="bg-accent text-white h-7 w-[65px] sm:h-8 sm:w-[90px] border-none text-[10px] sm:text-[11px] font-black tracking-widest uppercase shadow-sm">
               <SelectValue />
             </SelectTrigger>
@@ -147,7 +170,7 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
               variant="ghost"
               size="icon-xs"
               className="text-text-secondary hover:text-destructive hover:bg-destructive/10 h-7 w-7 sm:h-8 sm:w-8"
-              onClick={() => removeNode(group.id)}
+              onClick={handleRemove}
             >
               <Trash size={14} className="sm:size-4" />
             </Button>
@@ -159,7 +182,7 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
             variant="outline"
             size="xs"
             className="border-border bg-surface/50 hover:bg-accent/10 hover:border-accent/30 h-7 gap-1 px-1.5 text-[8px] font-bold uppercase tracking-wider sm:h-8 sm:gap-2 sm:px-3 sm:text-[10px]"
-            onClick={() => addRule(group.id)}
+            onClick={handleAddRule}
           >
             <Plus size={10} weight="bold" className="sm:size-3.5" /> <span className="hidden xs:inline">Add Rule</span>
           </Button>
@@ -167,7 +190,7 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
             variant="outline"
             size="xs"
             className="border-border bg-surface/50 hover:bg-accent/10 hover:border-accent/30 h-7 gap-1 px-1.5 text-[8px] font-bold uppercase tracking-wider sm:h-8 sm:gap-2 sm:px-3 sm:text-[10px]"
-            onClick={() => addGroup(group.id)}
+            onClick={handleAddGroup}
           >
             <FolderPlus size={10} weight="bold" className="sm:size-3.5" /> <span className="hidden xs:inline">Add Group</span>
           </Button>
@@ -182,14 +205,18 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
           >
             <div className="flex flex-col gap-3 sm:gap-4">
               {group.children.length === 0 ? (
-                <div className={cn(
-                  "border-border bg-background/20 flex flex-col items-center justify-center rounded-xl border border-dashed p-6 sm:p-8",
-                  error && "border-destructive/50 bg-destructive/10"
-                )}>
-                  <p className={cn(
-                    "text-text-secondary text-[10px] sm:text-[11px] font-bold opacity-50 uppercase tracking-[0.2em]",
-                    error && "text-destructive opacity-100 animate-pulse"
-                  )}>
+                <div
+                  className={cn(
+                    'border-border bg-background/20 flex flex-col items-center justify-center rounded-xl border border-dashed p-6 sm:p-8',
+                    error && 'border-destructive/50 bg-destructive/10'
+                  )}
+                >
+                  <p
+                    className={cn(
+                      'text-text-secondary text-[10px] sm:text-[11px] font-bold opacity-50 uppercase tracking-[0.2em]',
+                      error && 'text-destructive opacity-100 animate-pulse'
+                    )}
+                  >
                     {error || 'Empty Logical Group'}
                   </p>
                 </div>
@@ -208,4 +235,6 @@ export function ConditionGroup({ group, depth = 0 }: ConditionGroupProps) {
       )}
     </div>
   );
-}
+});
+
+ConditionGroup.displayName = 'ConditionGroup';
