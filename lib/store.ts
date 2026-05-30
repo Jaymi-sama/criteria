@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
-import { QueryGroup, QueryNode, QueryRule, Schema } from '@/types/query';
+import { QueryGroup, QueryNode, QueryRule, Schema, Operator, FieldType } from '@/types/query';
 import { v4 as uuidv4 } from 'uuid';
 
 interface QueryState {
@@ -45,6 +45,14 @@ interface QueryHistoryItem {
   query: string;
   rootGroup: QueryGroup;
 }
+
+const OPERATORS_BY_TYPE: Record<FieldType, Operator[]> = {
+  string: ['equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'is_null', 'is_not_null'],
+  number: ['equals', 'not_equals', 'greater_than', 'less_than', 'greater_than_equals', 'less_than_equals', 'between'],
+  enum: ['equals', 'not_equals', 'in'],
+  date: ['equals', 'less_than', 'greater_than', 'between'],
+  boolean: ['equals'],
+};
 
 const createDefaultRule = (fieldId: string): QueryRule => ({
   id: uuidv4(),
@@ -112,7 +120,7 @@ export const useQueryStore = create<QueryState>()(
         const errors: Record<string, string> = {};
         
         // Validate recursive tree
-        validateNode(state.rootGroup, errors);
+        validateNode(state.rootGroup, state.schema, errors);
         
         set((s) => {
           s.validationErrors = errors;
@@ -236,18 +244,47 @@ export const useQueryStore = create<QueryState>()(
   )
 );
 
-function validateNode(node: QueryNode, errors: Record<string, string>) {
+function validateNode(node: QueryNode, schema: Schema, errors: Record<string, string>) {
   if (node.type === 'rule') {
+    const field = schema.find(f => f.id === node.fieldId);
+    
+    // 1. Validate Field Exists
+    if (!field) {
+      errors[node.id] = 'Unknown field';
+      return;
+    }
+
+    // 2. Validate Operator Compatibility
+    const allowedOperators = OPERATORS_BY_TYPE[field.type];
+    if (!allowedOperators.includes(node.operator)) {
+      errors[node.id] = `Operator ${node.operator} not valid for ${field.type}`;
+    }
+
+    // 3. Validate Value Requirement
     if (node.value === undefined || node.value === '' || node.value === null) {
       if (node.operator !== 'is_null' && node.operator !== 'is_not_null') {
         errors[node.id] = 'Value is required';
       }
     }
+
+    // 4. Type-Specific Validation
+    if (node.value !== '' && node.value !== null) {
+      if (field.type === 'number') {
+        if (isNaN(Number(node.value))) {
+          errors[node.id] = 'Must be a valid number';
+        }
+      } else if (field.type === 'date') {
+        if (isNaN(Date.parse(String(node.value)))) {
+          errors[node.id] = 'Must be a valid date';
+        }
+      }
+    }
   } else {
+    // 5. Validate Empty Groups
     if (node.children.length === 0) {
       errors[node.id] = 'Group cannot be empty';
     }
-    node.children.forEach(child => validateNode(child, errors));
+    node.children.forEach(child => validateNode(child, schema, errors));
   }
 }
 
