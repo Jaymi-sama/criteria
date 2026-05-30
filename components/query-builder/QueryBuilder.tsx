@@ -4,7 +4,9 @@ import React from 'react';
 import { useQueryStore } from '@/lib/store';
 import { ConditionGroup } from './ConditionGroup';
 import { Button } from '@/components/ui/button';
-import { ArrowsCounterClockwise, Play, ShareNetwork } from '@phosphor-icons/react';
+import { ArrowsCounterClockwise, Play } from '@phosphor-icons/react';
+import { AdvancedInteractions } from './AdvancedInteractions';
+import { ImportExportModal } from './ImportExportModal';
 
 export function QueryBuilder() {
   const { rootGroup, resetQuery } = useQueryStore();
@@ -14,6 +16,7 @@ export function QueryBuilder() {
       {/* Builder Toolbar */}
       <div className="bg-surface border-border flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 shadow-sm">
         <div className="flex items-center gap-2">
+          <AdvancedInteractions />
           <Button
             variant="ghost"
             size="sm"
@@ -25,13 +28,7 @@ export function QueryBuilder() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-text-secondary hover:text-text-primary border-border h-10 gap-2 font-bold tracking-wider uppercase"
-          >
-            <ShareNetwork size={18} weight="duotone" /> Export
-          </Button>
+          <ImportExportModal />
           <Button
             variant="accent"
             size="sm"
