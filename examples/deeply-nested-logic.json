@@ -1,0 +1,21 @@
+{
+  "logicalOperator": "AND",
+  "children": [
+    { "type": "rule", "fieldId": "status", "operator": "not_equals", "value": "inactive" },
+    {
+      "type": "group",
+      "logicalOperator": "OR",
+      "children": [
+        { "type": "rule", "fieldId": "age", "operator": "less_than", "value": 18 },
+        {
+          "type": "group",
+          "logicalOperator": "AND",
+          "children": [
+            { "type": "rule", "fieldId": "age", "operator": "greater_than", "value": 65 },
+            { "type": "rule", "fieldId": "isVerified", "operator": "equals", "value": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

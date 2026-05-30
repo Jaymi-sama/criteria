@@ -1,0 +1,7 @@
+{
+  "logicalOperator": "AND",
+  "children": [
+    { "fieldId": "status", "operator": "equals", "value": "active" },
+    { "fieldId": "name", "operator": "starts_with", "value": "J" }
+  ]
+}

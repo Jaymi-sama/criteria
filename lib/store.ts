@@ -4,6 +4,33 @@ import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { QueryGroup, QueryNode, QueryRule, Schema } from '@/types/query';
 import { v4 as uuidv4 } from 'uuid';
 
+interface QueryState {
+  schema: Schema;
+  rootGroup: QueryGroup;
+  appliedRootGroup: QueryGroup;
+  presets: QueryPreset[];
+  history: QueryHistoryItem[];
+  validationErrors: Record<string, string>;
+
+  // Actions
+  addRule: (parentId: string) => void;
+  addGroup: (parentId: string) => void;
+  removeNode: (id: string) => void;
+  updateRule: (id: string, updates: Partial<QueryRule>) => void;
+  updateGroup: (id: string, updates: Partial<QueryGroup>) => void;
+  reorderChildren: (parentId: string, activeId: string, overId: string) => void;
+  importQuery: (newGroup: QueryGroup) => void;
+  runQuery: () => boolean; // Returns success
+  setSchema: (schema: Schema) => void;
+  resetQuery: () => void;
+  
+  // Preset & History Actions
+  savePreset: (name: string, description: string) => void;
+  deletePreset: (id: string) => void;
+  clearHistory: () => void;
+  restoreQuery: (rootGroup: QueryGroup) => void;
+}
+
 interface QueryPreset {
   id: string;
   name: string;
@@ -17,32 +44,6 @@ interface QueryHistoryItem {
   time: string;
   query: string;
   rootGroup: QueryGroup;
-}
-
-interface QueryState {
-  schema: Schema;
-  rootGroup: QueryGroup;
-  appliedRootGroup: QueryGroup;
-  presets: QueryPreset[];
-  history: QueryHistoryItem[];
-
-  // Actions
-  addRule: (parentId: string) => void;
-  addGroup: (parentId: string) => void;
-  removeNode: (id: string) => void;
-  updateRule: (id: string, updates: Partial<QueryRule>) => void;
-  updateGroup: (id: string, updates: Partial<QueryGroup>) => void;
-  reorderChildren: (parentId: string, activeId: string, overId: string) => void;
-  importQuery: (newGroup: QueryGroup) => void;
-  runQuery: () => void;
-  setSchema: (schema: Schema) => void;
-  resetQuery: () => void;
-
-  // Preset & History Actions
-  savePreset: (name: string, description: string) => void;
-  deletePreset: (id: string) => void;
-  clearHistory: () => void;
-  restoreQuery: (rootGroup: QueryGroup) => void;
 }
 
 const createDefaultRule = (fieldId: string): QueryRule => ({
@@ -85,12 +86,13 @@ const noopStorage: StateStorage = {
 
 export const useQueryStore = create<QueryState>()(
   persist(
-    immer((set) => ({
+    immer((set, get) => ({
       schema: initialSchema,
       rootGroup: createDefaultGroup(),
       appliedRootGroup: createDefaultGroup(),
       presets: [],
       history: [],
+      validationErrors: {},
 
       setSchema: (schema) =>
         set((state) => {
@@ -102,25 +104,42 @@ export const useQueryStore = create<QueryState>()(
           const fresh = createDefaultGroup();
           state.rootGroup = fresh;
           state.appliedRootGroup = fresh;
+          state.validationErrors = {};
         }),
 
-      runQuery: () =>
-        set((state) => {
-          const currentQuery = JSON.parse(JSON.stringify(state.rootGroup));
-          state.appliedRootGroup = currentQuery;
+      runQuery: () => {
+        const state = get();
+        const errors: Record<string, string> = {};
+        
+        // Validate recursive tree
+        validateNode(state.rootGroup, errors);
+        
+        set((s) => {
+          s.validationErrors = errors;
+        });
 
-          // Add to history
+        if (Object.keys(errors).length > 0) {
+          return false;
+        }
+
+        set((s) => {
+          const currentQuery = JSON.parse(JSON.stringify(s.rootGroup));
+          s.appliedRootGroup = currentQuery;
+          
           const historyItem: QueryHistoryItem = {
             id: uuidv4(),
-            name: `Manual Execution ${state.history.length + 1}`,
+            name: `Execution ${s.history.length + 1}`,
             time: new Date().toLocaleTimeString(),
-            query: JSON.stringify(currentQuery).substring(0, 50) + '...',
+            query: generateSimplifiedPreview(currentQuery),
             rootGroup: currentQuery,
           };
-
-          state.history.unshift(historyItem);
-          if (state.history.length > 10) state.history.pop();
-        }),
+          
+          s.history.unshift(historyItem);
+          if (s.history.length > 10) s.history.pop();
+        });
+        
+        return true;
+      },
 
       addRule: (parentId) =>
         set((state) => {
@@ -142,6 +161,7 @@ export const useQueryStore = create<QueryState>()(
         set((state) => {
           if (state.rootGroup.id === id) return;
           removeNodeRecursive(state.rootGroup, id);
+          delete state.validationErrors[id];
         }),
 
       updateRule: (id, updates) =>
@@ -149,6 +169,8 @@ export const useQueryStore = create<QueryState>()(
           const node = findNode(state.rootGroup, id) as QueryRule;
           if (node && node.type === 'rule') {
             Object.assign(node, updates);
+            // Clear error when updated
+            delete state.validationErrors[id];
           }
         }),
 
@@ -157,6 +179,7 @@ export const useQueryStore = create<QueryState>()(
           const node = findNode(state.rootGroup, id) as QueryGroup;
           if (node && node.type === 'group') {
             Object.assign(node, updates);
+            delete state.validationErrors[id];
           }
         }),
 
@@ -175,7 +198,7 @@ export const useQueryStore = create<QueryState>()(
 
       importQuery: (newGroup) => {
         const normalized = normalizeQueryNode(newGroup) as QueryGroup;
-        set({ rootGroup: normalized, appliedRootGroup: normalized });
+        set({ rootGroup: normalized, appliedRootGroup: normalized, validationErrors: {} });
       },
 
       savePreset: (name, description) =>
@@ -203,16 +226,38 @@ export const useQueryStore = create<QueryState>()(
           const normalized = normalizeQueryNode(rootGroup) as QueryGroup;
           state.rootGroup = normalized;
           state.appliedRootGroup = normalized;
+          state.validationErrors = {};
         }),
     })),
     {
       name: 'criteria-query-storage',
-      storage: createJSONStorage(() =>
-        typeof localStorage !== 'undefined' ? localStorage : noopStorage
-      ),
+      storage: createJSONStorage(() => (typeof localStorage !== 'undefined' ? localStorage : noopStorage)),
     }
   )
 );
+
+function validateNode(node: QueryNode, errors: Record<string, string>) {
+  if (node.type === 'rule') {
+    if (node.value === undefined || node.value === '' || node.value === null) {
+      if (node.operator !== 'is_null' && node.operator !== 'is_not_null') {
+        errors[node.id] = 'Value is required';
+      }
+    }
+  } else {
+    if (node.children.length === 0) {
+      errors[node.id] = 'Group cannot be empty';
+    }
+    node.children.forEach(child => validateNode(child, errors));
+  }
+}
+
+function generateSimplifiedPreview(node: QueryNode): string {
+  if (node.type === 'rule') {
+    return `${node.fieldId} ${node.operator} ${node.value}`;
+  }
+  if (node.children.length === 0) return '(empty)';
+  return `(${node.children.map(c => generateSimplifiedPreview(c)).join(` ${node.logicalOperator} `)})`;
+}
 
 function normalizeQueryNode(node: unknown): QueryNode {
   if (!node || typeof node !== 'object') {
