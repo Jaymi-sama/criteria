@@ -1,6 +1,12 @@
 import { QueryNode, Schema, QueryRule } from '@/types/query';
 
 export function generateSQL(node: QueryNode, schema: Schema): string {
+  const predicate = buildSQLPredicate(node, schema);
+  if (!predicate) return 'SELECT * FROM users;';
+  return `SELECT * FROM users\nWHERE ${predicate};`;
+}
+
+function buildSQLPredicate(node: QueryNode, schema: Schema): string {
   if (node.type === 'rule') {
     const field = schema.find((f) => f.id === node.fieldId);
     if (!field) return '';
@@ -17,9 +23,9 @@ export function generateSQL(node: QueryNode, schema: Schema): string {
   if (node.children.length === 0) return '';
 
   const childrenSql = node.children
-    .map((child) => generateSQL(child, schema))
+    .map((child) => buildSQLPredicate(child, schema))
     .filter((sql) => sql !== '')
-    .join(` ${node.logicalOperator} `);
+    .join(`\n  ${node.logicalOperator} `);
 
   return childrenSql ? `(${childrenSql})` : '';
 }
@@ -68,6 +74,8 @@ function getSQLOperator(op: string): string {
       return '>=';
     case 'less_than_equals':
       return '<=';
+    case 'regex':
+      return '~';
     default:
       return '=';
   }
@@ -89,6 +97,8 @@ function getMongoOperator(op: string): string {
       return '$lte';
     case 'in':
       return '$in';
+    case 'regex':
+      return '$regex';
     default:
       return '$eq';
   }

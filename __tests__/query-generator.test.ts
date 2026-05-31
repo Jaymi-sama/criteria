@@ -4,6 +4,7 @@ import { QueryGroup, Schema } from '@/types/query';
 
 describe('query-generator', () => {
   const schema: Schema = [
+    { id: 'name', label: 'Name', type: 'string' },
     { id: 'age', label: 'Age', type: 'number' },
     { id: 'status', label: 'Status', type: 'enum' },
   ];
@@ -14,26 +15,26 @@ describe('query-generator', () => {
     logicalOperator: 'AND',
     children: [
       {
-        id: 'r1',
+        id: '1',
         type: 'rule',
         fieldId: 'age',
         operator: 'greater_than',
         value: 18,
       },
       {
-        id: 'g1',
+        id: '2',
         type: 'group',
         logicalOperator: 'OR',
         children: [
           {
-            id: 'r2',
+            id: '3',
             type: 'rule',
             fieldId: 'status',
             operator: 'equals',
             value: 'active',
           },
           {
-            id: 'r3',
+            id: '4',
             type: 'rule',
             fieldId: 'status',
             operator: 'equals',
@@ -46,7 +47,10 @@ describe('query-generator', () => {
 
   it('should generate correct SQL', () => {
     const sql = generateSQL(mockQuery, schema);
-    expect(sql).toBe("(age > 18 AND (status = 'active' OR status = 'pending'))");
+    expect(sql).toContain('SELECT * FROM users');
+    expect(sql).toContain('WHERE (age > 18');
+    expect(sql).toContain('AND (status = \'active\'');
+    expect(sql).toContain('OR status = \'pending\'))');
   });
 
   it('should generate correct Mongo query', () => {
@@ -59,5 +63,22 @@ describe('query-generator', () => {
         },
       ],
     });
+  });
+
+  it('should support regex operator', () => {
+    const regexQuery: QueryGroup = {
+      id: 'root',
+      type: 'group',
+      logicalOperator: 'AND',
+      children: [
+        { id: '1', type: 'rule', fieldId: 'name', operator: 'regex', value: '^ali' }
+      ]
+    };
+    
+    const sql = generateSQL(regexQuery, schema);
+    expect(sql).toContain("name ~ '^ali'");
+    
+    const mongo = generateMongo(regexQuery);
+    expect(mongo).toEqual({ name: { $regex: '^ali' } });
   });
 });

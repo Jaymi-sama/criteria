@@ -24,6 +24,7 @@ const OPERATORS_BY_TYPE: Record<FieldType, { label: string; value: Operator }[]>
     { label: 'Contains', value: 'contains' },
     { label: 'Starts With', value: 'starts_with' },
     { label: 'Ends With', value: 'ends_with' },
+    { label: 'Regex', value: 'regex' },
     { label: 'Is Null', value: 'is_null' },
     { label: 'Is Not Null', value: 'is_not_null' },
   ],
@@ -113,7 +114,7 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group/rule bg-surface border-border hover:border-accent/40 animate-in fade-in slide-in-from-left-2 flex flex-col gap-4 rounded-xl border p-3 transition-all duration-200 sm:flex-row sm:items-center sm:p-4',
+        'group/rule bg-surface border-border hover:border-accent/40 animate-in fade-in slide-in-from-left-2 flex flex-col gap-3 rounded-xl border p-2 transition-all duration-200 sm:flex-row sm:items-center sm:gap-4 sm:p-2.5',
         error && 'border-destructive/50 bg-destructive/5'
       )}
     >
@@ -137,11 +138,8 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
         </Button>
       </div>
 
-      <div className="grid flex-1 grid-cols-1 gap-3 xs:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
-        <div className="flex flex-col gap-1.5 md:col-span-1">
-          <span className="text-text-secondary pl-1 text-[9px] font-black tracking-widest uppercase">
-            Field
-          </span>
+      <div className="grid flex-1 grid-cols-1 gap-2 sm:flex sm:items-center sm:gap-3">
+        <div className="w-full sm:w-[180px]">
           <Select value={rule.fieldId} onValueChange={handleFieldChange}>
             <SelectTrigger className="bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10">
               <SelectValue placeholder="Select field" />
@@ -156,10 +154,7 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1.5 md:col-span-1">
-          <span className="text-text-secondary pl-1 text-[9px] font-black tracking-widest uppercase">
-            Operator
-          </span>
+        <div className="w-full sm:w-[140px]">
           <Select value={rule.operator} onValueChange={handleOperatorChange}>
             <SelectTrigger className="bg-background border-border text-text-primary h-9 w-full font-bold sm:h-10">
               <SelectValue placeholder="Operator" />
@@ -174,17 +169,7 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1.5 xs:col-span-2 md:col-span-2">
-          <div className="flex items-center justify-between pl-1">
-            <span className="text-text-secondary text-[9px] font-black tracking-widest uppercase">
-              Value
-            </span>
-            {error && (
-              <span className="text-destructive animate-pulse text-[8px] font-bold uppercase">
-                {error}
-              </span>
-            )}
-          </div>
+        <div className="relative flex-1">
           {currentField?.type === 'enum' ? (
             <Select value={rule.value as string} onValueChange={handleValueChange}>
               <SelectTrigger
@@ -222,8 +207,15 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
               type={currentField?.type === 'number' ? 'number' : 'text'}
               value={rule.value as string}
               onChange={(e) => handleValueChange(e.target.value)}
-              placeholder="Enter value..."
+              placeholder={error || "Enter value..."}
             />
+          )}
+          {error && (
+            <div className="absolute -top-6 right-0 sm:-top-5">
+              <span className="text-destructive animate-pulse text-[8px] font-bold uppercase tracking-widest">
+                {error}
+              </span>
+            </div>
           )}
         </div>
       </div>
@@ -232,10 +224,10 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
       <Button
         variant="ghost"
         size="icon"
-        className="text-text-secondary hover:text-destructive hover:bg-destructive/10 hidden h-10 w-10 sm:flex"
+        className="text-text-secondary hover:text-destructive hover:bg-destructive/10 hidden h-9 w-9 sm:flex"
         onClick={handleRemove}
       >
-        <Trash size={20} />
+        <Trash size={18} />
       </Button>
     </div>
   );

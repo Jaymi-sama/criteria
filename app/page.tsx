@@ -3,18 +3,18 @@
 import { QueryBuilder } from '@/components/query-builder/QueryBuilder';
 import { QueryPreview } from '@/components/query-builder/QueryPreview';
 import { QueryResults } from '@/components/query-builder/QueryResults';
-import { Database } from '@phosphor-icons/react/dist/ssr';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import Image from 'next/image';
 
 export default function Home() {
   return (
     <div className="bg-background flex min-h-screen flex-col">
       {/* Top Header */}
-      <header className="border-border bg-surface/50 sticky top-0 z-50 w-full border-b px-4 py-3 sm:px-8 sm:py-4 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+      <header className="border-border bg-surface/50 sticky top-0 z-50 w-full border-b backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-8 sm:py-4 lg:px-12">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="bg-accent rounded-md p-1.5 sm:p-2">
-              <Database size={18} weight="fill" className="text-accent-foreground sm:size-5" />
+            <div className="rounded-md">
+              <Image src="/criteria.svg" alt="Criteria Logo" width={40} height={40} className="size-8 sm:size-10" />
             </div>
             <div className="flex flex-col">
               <h1 className="text-text-primary text-lg font-bold tracking-tight sm:text-xl">Criteria</h1>
@@ -28,7 +28,7 @@ export default function Home() {
       </header>
 
       {/* Main Workspace */}
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 sm:gap-12 p-4 sm:p-8 lg:p-12">
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 sm:gap-12 px-4 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
           {/* Left Column: Editor */}
           <div className="flex flex-col gap-4 sm:gap-6 lg:col-span-8">

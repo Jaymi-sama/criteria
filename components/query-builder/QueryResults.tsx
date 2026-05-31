@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 // Mock Data Type
@@ -46,6 +47,10 @@ export function QueryResults() {
   const [sortKey, setSortKey] = useState<keyof MockDataItem | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  
+  // Pagination State
+  const [pageIndex, setPageIndex] = useState(0);
+  const pageSize = 5;
 
   // Fix for hydration mismatches with persistent state
   useEffect(() => {
@@ -100,6 +105,22 @@ export function QueryResults() {
 
     return results;
   }, [appliedRootGroup, searchTerm, sortKey, sortOrder, isHydrated]);
+
+  // Paginated Data
+  const paginatedData = useMemo(() => {
+    const start = pageIndex * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, pageIndex, pageSize]);
+
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+
+  // Reset page when filtering changes
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => {
+      setPageIndex(0);
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [searchTerm, appliedRootGroup]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -186,7 +207,7 @@ export function QueryResults() {
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
-              {filteredData.length === 0 ? (
+              {paginatedData.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-20 text-center">
                     <div className="flex flex-col items-center gap-4 opacity-20">
@@ -198,7 +219,7 @@ export function QueryResults() {
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item) => (
+                paginatedData.map((item) => (
                   <tr
                     key={item.id}
                     className="hover:bg-accent/5 animate-in fade-in slide-in-from-bottom-1 group/row transition-colors"
@@ -249,6 +270,38 @@ export function QueryResults() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="border-border bg-background/40 flex items-center justify-between border-t p-3 px-4 sm:px-6">
+          <div className="flex items-center gap-2">
+            <span className="text-text-secondary text-[10px] font-bold uppercase tracking-widest opacity-60">
+              Page {pageIndex + 1} of {totalPages || 1}
+            </span>
+            <span className="text-text-secondary hidden sm:inline text-[10px] font-bold uppercase tracking-widest opacity-30">
+              &bull; {filteredData.length} Total Results
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="xs"
+              className="border-border h-7 px-3 text-[10px] font-black uppercase tracking-widest disabled:opacity-30 cursor-pointer"
+              onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+              disabled={pageIndex === 0}
+            >
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="xs"
+              className="border-border h-7 px-3 text-[10px] font-black uppercase tracking-widest disabled:opacity-30 cursor-pointer"
+              onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={pageIndex >= totalPages - 1}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
     </div>
