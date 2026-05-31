@@ -12,8 +12,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Visual Query Builder',
+  title: 'Criteria | Visual Query Builder',
   description: 'A highly interactive visual query builder',
+  icons: {
+    icon: '/criteria.svg',
+  },
 };
 
 export default function RootLayout({

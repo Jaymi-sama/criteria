@@ -18,7 +18,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { DownloadSimple, UploadSimple, Copy, CheckCircle, FileText } from '@phosphor-icons/react';
 
 export function ImportExportModal() {
-  const { rootGroup, importQuery } = useQueryStore();
+  const rootGroup = useQueryStore((s) => s.rootGroup);
+  const importQuery = useQueryStore((s) => s.importQuery);
+  
   const [copied, setCopied] = React.useState(false);
   const [jsonInput, setJsonInput] = React.useState(() => JSON.stringify(rootGroup, null, 2));
   const [open, setOpen] = React.useState(false);
@@ -37,7 +39,7 @@ export function ImportExportModal() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy: ', err);
+      // Failed to copy
     }
   };
 
@@ -63,14 +65,7 @@ export function ImportExportModal() {
     try {
       const parsed = JSON.parse(jsonInput);
       if (parsed && typeof parsed === 'object') {
-        const groupToImport: QueryGroup = {
-          id: parsed.id || `root-${Date.now()}`,
-          type: 'group',
-          logicalOperator: parsed.logicalOperator || 'AND',
-          children: Array.isArray(parsed.children) ? parsed.children : [],
-          isCollapsed: !!parsed.isCollapsed,
-        };
-        importQuery(groupToImport);
+        importQuery(parsed as QueryGroup);
         setOpen(false);
       } else {
         alert('Invalid format. Expected a JSON object.');
@@ -86,20 +81,20 @@ export function ImportExportModal() {
         <Button
           variant="outline"
           size="sm"
-          className="border-border text-text-secondary hover:text-text-primary h-10 w-full sm:w-auto gap-2 font-bold uppercase tracking-wider text-[10px] sm:text-xs"
+          className="border-border text-text-secondary hover:text-text-primary h-10 w-full sm:w-auto gap-2 font-bold uppercase tracking-wider text-[10px] sm:text-xs cursor-pointer"
         >
           <DownloadSimple size={18} weight="duotone" />
           Import / Export
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-surface border-border flex max-h-[90vh] w-[calc(100vw-32px)] sm:w-full sm:max-w-2xl flex-col overflow-hidden rounded-xl border p-0 shadow-2xl">
-        <DialogHeader className="border-border bg-background/30 border-b p-4 sm:p-6 text-left">
+        <DialogHeader className="border-border border-b p-4 sm:p-6 text-left">
           <DialogTitle className="text-text-primary flex items-center gap-2 text-lg sm:text-xl font-bold uppercase tracking-tight">
             <UploadSimple size={20} className="text-accent sm:size-6" weight="duotone" />
-            Query JSON
+            Query Transfer
           </DialogTitle>
           <DialogDescription className="text-text-secondary text-[11px] sm:text-sm font-medium">
-            Import or export your query configuration.
+            Import or export your query configuration via JSON.
           </DialogDescription>
         </DialogHeader>
 
@@ -153,21 +148,21 @@ export function ImportExportModal() {
           </div>
         </div>
 
-        <DialogFooter className="border-border bg-background/30 flex flex-col sm:flex-row items-center justify-between border-t p-4 sm:p-6 gap-3">
-          <span className="text-text-secondary text-[9px] sm:text-[10px] font-bold tracking-widest uppercase opacity-60">
-            Format: JSON v1
+        <DialogFooter className="border-border bg-background/30 flex items-center justify-between border-t p-3 px-4 sm:px-6">
+          <span className="text-text-secondary text-[9px] font-bold tracking-widest uppercase opacity-40">
+            Clipboard & File Support
           </span>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-2">
             <DialogClose asChild>
               <Button
                 variant="outline"
-                className="border-border h-9 sm:h-10 flex-1 sm:flex-initial font-bold uppercase tracking-wider text-[10px] sm:text-xs"
+                className="border-border h-8 font-bold uppercase tracking-wider text-[10px] sm:text-xs"
               >
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              className="bg-accent text-accent-foreground h-9 sm:h-10 flex-1 sm:flex-initial px-4 sm:px-6 font-black uppercase tracking-widest text-[10px] sm:text-xs"
+              className="bg-accent text-accent-foreground h-8 px-4 font-black uppercase tracking-widest text-[10px] sm:text-xs"
               onClick={handleApplyImport}
             >
               Apply
