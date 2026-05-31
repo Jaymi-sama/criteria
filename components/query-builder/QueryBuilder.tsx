@@ -16,10 +16,7 @@ export function QueryBuilder() {
   useKeyboardShortcuts();
 
   const handleRunQuery = () => {
-    const success = runQuery();
-    if (!success) {
-      console.log('Query validation failed.');
-    }
+    runQuery();
   };
 
   const hasErrors = Object.keys(validationErrors).length > 0;
