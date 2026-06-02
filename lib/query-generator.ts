@@ -16,6 +16,11 @@ function buildSQLPredicate(node: QueryNode, schema: Schema): string {
 
     if (node.operator === 'is_null') return `${node.fieldId} IS NULL`;
     if (node.operator === 'is_not_null') return `${node.fieldId} IS NOT NULL`;
+    if (node.operator === 'between' && Array.isArray(node.value) && node.value.length === 2) {
+      const v1 = formatValue(node.value[0], field.type);
+      const v2 = formatValue(node.value[1], field.type);
+      return `${node.fieldId} BETWEEN ${v1} AND ${v2}`;
+    }
 
     return `${node.fieldId} ${operator} ${value}`;
   }
@@ -36,6 +41,9 @@ export function generateMongo(node: QueryNode): Record<string, unknown> {
     if (node.operator === 'equals') return { [node.fieldId]: node.value };
     if (node.operator === 'is_null') return { [node.fieldId]: null };
     if (node.operator === 'is_not_null') return { [node.fieldId]: { $ne: null } };
+    if (node.operator === 'between' && Array.isArray(node.value) && node.value.length === 2) {
+      return { [node.fieldId]: { $gte: node.value[0], $lte: node.value[1] } };
+    }
 
     return { [node.fieldId]: { [operator]: node.value } };
   }
