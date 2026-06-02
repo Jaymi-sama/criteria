@@ -10,6 +10,7 @@ import {
   CaretDown,
   Database,
   CheckCircle,
+  Warning,
 } from '@phosphor-icons/react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -73,13 +74,19 @@ export function QueryResults() {
     }
   };
 
-  const filteredData = useMemo(() => {
-    if (!isHydrated) return FULL_MOCK_DATA;
+  const { filteredData, executionError } = useMemo(() => {
+    if (!isHydrated) return { filteredData: FULL_MOCK_DATA };
 
-    let results = executeQuery(
+    const result = executeQuery(
       FULL_MOCK_DATA as unknown as Record<string, unknown>[],
       appliedRootGroup
-    ) as unknown as MockDataItem[];
+    );
+
+    if (result.error) {
+      return { filteredData: [], executionError: result.error.message };
+    }
+
+    let results = result.data as unknown as MockDataItem[];
 
     if (searchTerm) {
       results = results.filter(
@@ -103,7 +110,7 @@ export function QueryResults() {
       });
     }
 
-    return results;
+    return { filteredData: results };
   }, [appliedRootGroup, searchTerm, sortKey, sortOrder, isHydrated]);
 
   // Paginated Data
@@ -165,6 +172,17 @@ export function QueryResults() {
         </div>
       </div>
 
+      {/* Error State Overlay for Calculation Errors */}
+      {executionError && (
+        <div className="bg-destructive/10 border-destructive/20 flex items-center gap-4 rounded-xl border p-4 animate-in fade-in slide-in-from-top-2">
+          <Warning size={24} className="text-destructive shrink-0" weight="fill" />
+          <div className="flex flex-col">
+            <span className="text-destructive text-xs font-black uppercase tracking-widest">Execution Error</span>
+            <p className="text-text-secondary text-sm font-medium">{executionError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Results Table */}
       <div className="border-border group relative overflow-hidden rounded-2xl border bg-surface/30">
         <div className="theme-scrollbar max-h-[500px] overflow-auto">
@@ -213,7 +231,7 @@ export function QueryResults() {
                     <div className="flex flex-col items-center gap-4 opacity-20">
                       <Funnel size={48} weight="thin" />
                       <p className="text-[10px] font-black uppercase tracking-[0.3em]">
-                        No matching results found
+                        {executionError ? 'Calculation blocked by error' : 'No matching results found'}
                       </p>
                     </div>
                   </td>

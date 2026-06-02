@@ -10,13 +10,30 @@ import { AdvancedInteractions } from './AdvancedInteractions';
 import { ImportExportModal } from './ImportExportModal';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export function QueryBuilder() {
-  const { rootGroup, resetQuery, runQuery, validationErrors } = useQueryStore();
+  const rootGroup = useQueryStore((s) => s.rootGroup);
+  const resetQuery = useQueryStore((s) => s.resetQuery);
+  const runQuery = useQueryStore((s) => s.runQuery);
+  const validationErrors = useQueryStore((s) => s.validationErrors);
+  
   useKeyboardShortcuts();
 
   const handleRunQuery = () => {
-    runQuery();
+    const success = runQuery();
+    if (!success) {
+      toast.error('Validation Error', {
+        description: 'Please fix the highlighted errors before running the query.'
+      });
+    } else {
+      toast.success('Query executed successfully');
+    }
+  };
+
+  const handleReset = () => {
+    resetQuery();
+    toast.info('Workspace reset');
   };
 
   const hasErrors = Object.keys(validationErrors).length > 0;
@@ -37,7 +54,7 @@ export function QueryBuilder() {
                   variant="ghost"
                   size="sm"
                   className="text-text-secondary hover:text-text-primary h-10 w-full gap-2 border border-transparent font-bold uppercase tracking-wider text-[10px] hover:border-border sm:w-auto sm:text-xs cursor-pointer"
-                  onClick={resetQuery}
+                  onClick={handleReset}
                 >
                   <ArrowsCounterClockwise size={18} /> Reset
                 </Button>

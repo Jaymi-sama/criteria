@@ -47,7 +47,7 @@ interface QueryHistoryItem {
 }
 
 const OPERATORS_BY_TYPE: Record<FieldType, Operator[]> = {
-  string: ['equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'is_null', 'is_not_null'],
+  string: ['equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'is_null', 'is_not_null', 'regex'],
   number: ['equals', 'not_equals', 'greater_than', 'less_than', 'greater_than_equals', 'less_than_equals', 'between'],
   enum: ['equals', 'not_equals', 'in'],
   date: ['equals', 'less_than', 'greater_than', 'between'],
@@ -261,14 +261,27 @@ function validateNode(node: QueryNode, schema: Schema, errors: Record<string, st
     }
 
     // 3. Validate Value Requirement
-    if (node.value === undefined || node.value === '' || node.value === null) {
+    if (node.operator === 'between') {
+      if (!Array.isArray(node.value) || node.value.length !== 2 || 
+          node.value[0] === '' || node.value[1] === '' ||
+          node.value[0] === null || node.value[1] === null) {
+        errors[node.id] = 'Both values are required';
+      } else {
+        // Range validation
+        if (field.type === 'number') {
+          if (isNaN(Number(node.value[0])) || isNaN(Number(node.value[1]))) {
+            errors[node.id] = 'Must be valid numbers';
+          }
+        }
+      }
+    } else if (node.value === undefined || node.value === '' || node.value === null) {
       if (node.operator !== 'is_null' && node.operator !== 'is_not_null') {
         errors[node.id] = 'Value is required';
       }
     }
 
-    // 4. Type-Specific Validation
-    if (node.value !== '' && node.value !== null) {
+    // 4. Type-Specific Validation (Non-range)
+    if (node.operator !== 'between' && node.value !== '' && node.value !== null) {
       if (field.type === 'number') {
         if (isNaN(Number(node.value))) {
           errors[node.id] = 'Must be a valid number';
@@ -290,6 +303,9 @@ function validateNode(node: QueryNode, schema: Schema, errors: Record<string, st
 
 function generateSimplifiedPreview(node: QueryNode): string {
   if (node.type === 'rule') {
+    if (node.operator === 'between' && Array.isArray(node.value)) {
+      return `${node.fieldId} between ${node.value[0]} and ${node.value[1]}`;
+    }
     return `${node.fieldId} ${node.operator} ${node.value}`;
   }
   if (node.children.length === 0) return '(empty)';
