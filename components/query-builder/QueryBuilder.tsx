@@ -21,6 +21,7 @@ export function QueryBuilder() {
   useKeyboardShortcuts();
 
   const handleRunQuery = () => {
+<<<<<<< HEAD
     const success = runQuery();
     if (!success) {
       toast.error('Validation Error', {
@@ -29,6 +30,9 @@ export function QueryBuilder() {
     } else {
       toast.success('Query executed successfully');
     }
+=======
+    runQuery();
+>>>>>>> d4ce9b591296fad00a17affe38b0f431fd649595
   };
 
   const handleReset = () => {
