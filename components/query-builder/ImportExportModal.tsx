@@ -40,13 +40,8 @@ export function ImportExportModal() {
       setCopied(true);
       toast.success('Configuration copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
-<<<<<<< HEAD
     } catch {
       toast.error('Failed to copy to clipboard');
-=======
-    } catch (err) {
-      // Failed to copy
->>>>>>> d4ce9b591296fad00a17affe38b0f431fd649595
     }
   };
 
