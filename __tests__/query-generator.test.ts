@@ -65,6 +65,26 @@ describe('query-generator', () => {
     });
   });
 
+  it('should support Mongo string operators and arrays', () => {
+    const stringQuery: QueryGroup = {
+      id: 'root',
+      type: 'group',
+      logicalOperator: 'AND',
+      children: [
+        { id: '1', type: 'rule', fieldId: 'name', operator: 'contains', value: 'alice' },
+        { id: '2', type: 'rule', fieldId: 'status', operator: 'in', value: 'active, pending' }
+      ]
+    };
+    
+    const mongo = generateMongo(stringQuery);
+    expect(mongo).toEqual({
+      $and: [
+        { name: { $regex: 'alice', $options: 'i' } },
+        { status: { $in: ['active', 'pending'] } }
+      ]
+    });
+  });
+
   it('should support regex operator', () => {
     const regexQuery: QueryGroup = {
       id: 'root',
@@ -79,6 +99,6 @@ describe('query-generator', () => {
     expect(sql).toContain("name ~ '^ali'");
     
     const mongo = generateMongo(regexQuery);
-    expect(mongo).toEqual({ name: { $regex: '^ali' } });
+    expect(mongo).toEqual({ name: { $regex: '^ali', $options: 'i' } });
   });
 });

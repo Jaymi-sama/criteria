@@ -37,14 +37,36 @@ function buildSQLPredicate(node: QueryNode, schema: Schema): string {
 
 export function generateMongo(node: QueryNode): Record<string, unknown> {
   if (node.type === 'rule') {
-    const operator = getMongoOperator(node.operator);
     if (node.operator === 'equals') return { [node.fieldId]: node.value };
+    if (node.operator === 'not_equals') return { [node.fieldId]: { $ne: node.value } };
     if (node.operator === 'is_null') return { [node.fieldId]: null };
     if (node.operator === 'is_not_null') return { [node.fieldId]: { $ne: null } };
+    
     if (node.operator === 'between' && Array.isArray(node.value) && node.value.length === 2) {
       return { [node.fieldId]: { $gte: node.value[0], $lte: node.value[1] } };
     }
 
+    if (node.operator === 'contains') {
+      return { [node.fieldId]: { $regex: node.value, $options: 'i' } };
+    }
+    if (node.operator === 'starts_with') {
+      return { [node.fieldId]: { $regex: `^${node.value}`, $options: 'i' } };
+    }
+    if (node.operator === 'ends_with') {
+      return { [node.fieldId]: { $regex: `${node.value}$`, $options: 'i' } };
+    }
+    if (node.operator === 'regex') {
+      return { [node.fieldId]: { $regex: node.value, $options: 'i' } };
+    }
+
+    if (node.operator === 'in') {
+      const values = typeof node.value === 'string' 
+        ? node.value.split(',').map(v => v.trim())
+        : node.value;
+      return { [node.fieldId]: { $in: values } };
+    }
+
+    const operator = getMongoOperator(node.operator);
     return { [node.fieldId]: { [operator]: node.value } };
   }
 
@@ -56,6 +78,8 @@ export function generateMongo(node: QueryNode): Record<string, unknown> {
 
   if (childrenMongo.length === 0) return {};
 
+  if (childrenMongo.length === 1) return childrenMongo[0];
+
   const key = node.logicalOperator === 'AND' ? '$and' : '$or';
   return { [key]: childrenMongo };
 }
@@ -66,48 +90,31 @@ function formatValue(value: QueryRule['value'], type: string): string {
   }
   return String(value);
 }
+
 function getSQLOperator(op: string): string {
   switch (op) {
-    case 'equals':
-      return '=';
-    case 'not_equals':
-      return '!=';
-    case 'contains':
-      return 'LIKE';
-    case 'greater_than':
-      return '>';
-    case 'less_than':
-      return '<';
-    case 'greater_than_equals':
-      return '>=';
-    case 'less_than_equals':
-      return '<=';
-    case 'regex':
-      return '~';
-    default:
-      return '=';
+    case 'equals': return '=';
+    case 'not_equals': return '!=';
+    case 'contains': return 'LIKE';
+    case 'greater_than': return '>';
+    case 'less_than': return '<';
+    case 'greater_than_equals': return '>=';
+    case 'less_than_equals': return '<=';
+    case 'regex': return '~';
+    default: return '=';
   }
 }
 
 function getMongoOperator(op: string): string {
   switch (op) {
-    case 'equals':
-      return '$eq';
-    case 'not_equals':
-      return '$ne';
-    case 'greater_than':
-      return '$gt';
-    case 'less_than':
-      return '$lt';
-    case 'greater_than_equals':
-      return '$gte';
-    case 'less_than_equals':
-      return '$lte';
-    case 'in':
-      return '$in';
-    case 'regex':
-      return '$regex';
-    default:
-      return '$eq';
+    case 'equals': return '$eq';
+    case 'not_equals': return '$ne';
+    case 'greater_than': return '$gt';
+    case 'less_than': return '$lt';
+    case 'greater_than_equals': return '$gte';
+    case 'less_than_equals': return '$lte';
+    case 'in': return '$in';
+    case 'regex': return '$regex';
+    default: return '$eq';
   }
 }
