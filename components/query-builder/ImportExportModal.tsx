@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { DownloadSimple, UploadSimple, Copy, CheckCircle, FileText } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 
 export function ImportExportModal() {
   const rootGroup = useQueryStore((s) => s.rootGroup);
@@ -37,9 +38,10 @@ export function ImportExportModal() {
     try {
       await navigator.clipboard.writeText(jsonInput);
       setCopied(true);
+      toast.success('Configuration copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      // Failed to copy
+    } catch {
+      toast.error('Failed to copy to clipboard');
     }
   };
 
@@ -52,7 +54,11 @@ export function ImportExportModal() {
       const content = e.target?.result;
       if (typeof content === 'string') {
         setJsonInput(content);
+        toast.info('File loaded successfully');
       }
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read file');
     };
     reader.readAsText(file);
   };
@@ -67,11 +73,17 @@ export function ImportExportModal() {
       if (parsed && typeof parsed === 'object') {
         importQuery(parsed as QueryGroup);
         setOpen(false);
+        toast.success('Query imported and normalized successfully');
       } else {
-        alert('Invalid format. Expected a JSON object.');
+        toast.error('Import failed', {
+          description: 'Expected a JSON object at root level.'
+        });
       }
-    } catch {
-      alert('Failed to parse JSON. Please check your syntax.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown syntax error';
+      toast.error('Invalid JSON Syntax', {
+        description: message
+      });
     }
   };
 

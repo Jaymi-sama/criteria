@@ -4,11 +4,15 @@ import { QueryBuilder } from '@/components/query-builder/QueryBuilder';
 import { QueryPreview } from '@/components/query-builder/QueryPreview';
 import { QueryResults } from '@/components/query-builder/QueryResults';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { HelpModal } from '@/components/query-builder/HelpModal';
+import { SplashScreen } from '@/components/ui/SplashScreen';
 import Image from 'next/image';
 
 export default function Home() {
   return (
     <div className="bg-background flex min-h-screen flex-col">
+      <SplashScreen />
+      <HelpModal />
       {/* Top Header */}
       <header className="border-border bg-surface/50 sticky top-0 z-50 w-full border-b backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-8 sm:py-4 lg:px-12">

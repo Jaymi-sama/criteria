@@ -93,9 +93,19 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
 
   const handleOperatorChange = useCallback(
     (value: string) => {
-      updateRule(rule.id, { operator: value as Operator });
+      const op = value as Operator;
+      const updates: Partial<QueryRule> = { operator: op };
+      
+      // Initialize array for 'between' if not already
+      if (op === 'between' && !Array.isArray(rule.value)) {
+        updates.value = ['', ''];
+      } else if (op !== 'between' && Array.isArray(rule.value)) {
+        updates.value = '';
+      }
+      
+      updateRule(rule.id, updates);
     },
-    [rule.id, updateRule]
+    [rule.id, rule.value, updateRule]
   );
 
   const handleValueChange = useCallback(
@@ -105,9 +115,20 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
     [rule.id, updateRule]
   );
 
+  const handleRangeValueChange = useCallback(
+    (index: number, val: string) => {
+      const currentVal = Array.isArray(rule.value) ? [...rule.value] : ['', ''];
+      currentVal[index] = val;
+      updateRule(rule.id, { value: currentVal as string[] | number[] });
+    },
+    [rule.id, rule.value, updateRule]
+  );
+
   const handleRemove = useCallback(() => {
     removeNode(rule.id);
   }, [rule.id, removeNode]);
+
+  const isRange = rule.operator === 'between';
 
   return (
     <div
@@ -198,6 +219,30 @@ export const ConditionRule = memo(({ rule }: ConditionRuleProps) => {
                 <SelectItem value="false">False</SelectItem>
               </SelectContent>
             </Select>
+          ) : isRange ? (
+            <div className="flex items-center gap-2">
+              <Input
+                className={cn(
+                  'bg-background border-border text-text-primary h-9 font-bold sm:h-10',
+                  error && 'border-destructive focus-visible:ring-destructive/20'
+                )}
+                type={currentField?.type === 'number' ? 'number' : 'text'}
+                value={Array.isArray(rule.value) ? (rule.value[0] as string) : ''}
+                onChange={(e) => handleRangeValueChange(0, e.target.value)}
+                placeholder="Min"
+              />
+              <span className="text-text-secondary font-bold">-</span>
+              <Input
+                className={cn(
+                  'bg-background border-border text-text-primary h-9 font-bold sm:h-10',
+                  error && 'border-destructive focus-visible:ring-destructive/20'
+                )}
+                type={currentField?.type === 'number' ? 'number' : 'text'}
+                value={Array.isArray(rule.value) ? (rule.value[1] as string) : ''}
+                onChange={(e) => handleRangeValueChange(1, e.target.value)}
+                placeholder="Max"
+              />
+            </div>
           ) : (
             <Input
               className={cn(

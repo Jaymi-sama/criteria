@@ -1,12 +1,31 @@
 import { QueryNode, QueryRule } from '@/types/query';
 
+export interface ExecutionResult {
+  data: Record<string, unknown>[];
+  error?: {
+    nodeId: string;
+    message: string;
+  };
+}
+
 export function executeQuery(
   data: Record<string, unknown>[],
   node: QueryNode
-): Record<string, unknown>[] {
-  if (data.length === 0) return [];
+): ExecutionResult {
+  if (data.length === 0) return { data: [] };
 
-  return data.filter((item) => evaluateNode(item, node));
+  try {
+    const filtered = data.filter((item) => evaluateNode(item, node));
+    return { data: filtered };
+  } catch (err: unknown) {
+    return {
+      data: [],
+      error: {
+        nodeId: node.id,
+        message: err instanceof Error ? err.message : 'Unknown evaluation error',
+      },
+    };
+  }
 }
 
 function evaluateNode(item: Record<string, unknown>, node: QueryNode): boolean {
@@ -60,12 +79,21 @@ function evaluateRule(item: Record<string, unknown>, rule: QueryRule): boolean {
         .map((s) => s.trim().toLowerCase());
       return array.includes(String(value).toLowerCase());
     }
+    case 'between': {
+      if (!Array.isArray(target) || target.length !== 2) return true;
+      const [min, max] = target;
+      if (typeof value === 'number') {
+        return value >= Number(min) && value <= Number(max);
+      }
+      return String(value).toLowerCase() >= String(min).toLowerCase() && 
+             String(value).toLowerCase() <= String(max).toLowerCase();
+    }
     case 'regex':
       try {
         const re = new RegExp(String(target), 'i');
         return re.test(String(value));
       } catch {
-        return false;
+        throw new Error(`Invalid Regular Expression: ${target}`);
       }
     default:
       return true;
