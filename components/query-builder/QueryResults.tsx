@@ -139,7 +139,7 @@ export function QueryResults() {
           </div>
           <div className="flex flex-col">
             <h3 className="text-text-primary text-xs font-black uppercase tracking-widest sm:text-sm">
-              Query Inspection
+              Inspect Query
             </h3>
             <div className="flex items-center gap-1.5">
               <span className="bg-green-500 h-1.5 w-1.5 rounded-full animate-pulse" />

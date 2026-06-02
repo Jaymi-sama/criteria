@@ -29,7 +29,7 @@ export function SplashScreen() {
   return (
     <div
       className={cn(
-        'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0b0f19] transition-all duration-700 ease-in-out',
+        'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#020617] transition-all duration-700 ease-in-out',
         !isVisible && 'opacity-0 pointer-events-none'
       )}
     >
