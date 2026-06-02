@@ -8,7 +8,7 @@ test('query builder UI loads and allows adding rules', async ({ page }) => {
 
   // Verify the sections are present (using specific levels to avoid ambiguity)
   await expect(page.getByRole('heading', { name: /^Editor$/i, level: 2 })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /^Preview$/i, level: 2 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Overview$/i, level: 2 })).toBeVisible();
   await expect(page.getByRole('heading', { name: /^Inspection$/i, level: 2 })).toBeVisible();
 
   // Verify the archive button is present

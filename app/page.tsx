@@ -41,7 +41,7 @@ export default function Home() {
                 Editor
               </h2>
               <p className="text-text-secondary text-xs font-medium sm:text-sm">
-                Construct recursive logic for complex data filtering.
+                Create recursive logic to filter complex data.
               </p>
             </div>
             <QueryBuilder />
@@ -51,9 +51,9 @@ export default function Home() {
           <div className="flex flex-col gap-4 sm:gap-6 lg:col-span-4">
             <div className="flex flex-col gap-1 sm:gap-2">
               <h2 className="text-text-primary text-xl font-black tracking-tighter uppercase sm:text-2xl">
-                Preview
+                Overview
               </h2>
-              <p className="text-text-secondary text-xs font-medium sm:text-sm">Generated syntax output.</p>
+              <p className="text-text-secondary text-xs font-medium sm:text-sm">Syntax Output</p>
             </div>
             <div className="lg:sticky lg:top-28 h-fit lg:h-[calc(100vh-200px)] min-h-[400px] sm:min-h-[500px]">
               <QueryPreview />
@@ -65,10 +65,10 @@ export default function Home() {
         <section className="border-border flex flex-col gap-4 sm:gap-6 border-t pt-8 sm:pt-10">
           <div className="flex flex-col gap-1 sm:gap-2">
             <h2 className="text-text-primary text-xl font-black tracking-tighter uppercase sm:text-2xl">
-              Inspection
+              Inspect
             </h2>
             <p className="text-text-secondary text-xs font-medium sm:text-sm">
-              Validate your query against live simulated data.
+              Verify your query using real-time simulated data.
             </p>
           </div>
           <div className="border-border w-full overflow-hidden rounded-xl border">
